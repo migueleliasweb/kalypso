@@ -20,7 +20,7 @@
 
 ## Single-purpose reconcilers
 
-Each reconciler should manage the lifecycle of a single resource at a time. This way, we can ensure retries and alerts can be more details and provide better understanding of what is going on inside the Controller as a whole.
+Each reconciler must only manage the lifecycle of a single Kubernetes resource type. This way, we can ensure retries and alerts can be more details and provide better understanding of what is going on inside the Controller as a whole.
 
 Consider grouping the reconcilers in folder with the capabiltiy they are related to. Ask the user if you need clarification. 
 
