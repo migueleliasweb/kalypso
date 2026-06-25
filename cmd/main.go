@@ -179,6 +179,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// KRO ResourceGraphDefinition Sync Controller
+	if err := (&workload.ResourceGraphDefinitionReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"ResourceGraphDefinition",
+		)
+		os.Exit(1)
+	}
+
 	// Workload Capability Controllers
 	if err := (&workload.ComputeReconciler{
 		Client: mgr.GetClient(),
