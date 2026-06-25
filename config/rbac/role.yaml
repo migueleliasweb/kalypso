@@ -5,48 +5,8 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  - services
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - autoscaling
-  resources:
-  - horizontalpodautoscalers
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - calypso.lmoet.io
   resources:
-  - computes
-  - networkings
-  - observabilities
-  - securities
-  - storages
   - workloads
   verbs:
   - create
@@ -59,32 +19,21 @@ rules:
 - apiGroups:
   - calypso.lmoet.io
   resources:
-  - computes/finalizers
-  - networkings/finalizers
-  - observabilities/finalizers
-  - securities/finalizers
-  - storages/finalizers
   - workloads/finalizers
   verbs:
   - update
 - apiGroups:
   - calypso.lmoet.io
   resources:
-  - computes/status
-  - networkings/status
-  - observabilities/status
-  - securities/status
-  - storages/status
   - workloads/status
   verbs:
   - get
   - patch
   - update
 - apiGroups:
-  - monitoring.coreos.com
+  - kalypso.io
   resources:
-  - podmonitors
-  - servicemonitors
+  - workloadgraphs
   verbs:
   - create
   - delete
@@ -94,34 +43,23 @@ rules:
   - update
   - watch
 - apiGroups:
-  - networking.k8s.io
+  - kalypso.io
   resources:
-  - ingresses
+  - workloadgraphs/finalizers
   verbs:
-  - create
-  - delete
+  - update
+- apiGroups:
+  - kalypso.io
+  resources:
+  - workloadgraphs/status
+  verbs:
   - get
-  - list
   - patch
   - update
-  - watch
 - apiGroups:
-  - policy
+  - kro.run
   resources:
-  - poddisruptionbudgets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - rolebindings
-  - roles
+  - resourcegraphdefinitions
   verbs:
   - create
   - delete

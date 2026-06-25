@@ -36,11 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
-	"github.com/migueleliasweb/kalypso/internal/controller/compute"
-	"github.com/migueleliasweb/kalypso/internal/controller/networking"
-	"github.com/migueleliasweb/kalypso/internal/controller/observability"
-	"github.com/migueleliasweb/kalypso/internal/controller/security"
-	"github.com/migueleliasweb/kalypso/internal/controller/storage"
+	krov1alpha1 "github.com/kubernetes-sigs/kro/api/v1alpha1"
 	"github.com/migueleliasweb/kalypso/internal/controller/workload"
 	// +kubebuilder:scaffold:imports
 )
@@ -54,6 +50,8 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(calypsov1alpha1.AddToScheme(scheme))
+
+	utilruntime.Must(krov1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -247,153 +245,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Compute Capability Controllers
-	if err := (&compute.DeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"ComputeDeployment",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&compute.HPAReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"ComputeHPA",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&compute.PDBReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"ComputePDB",
-		)
-		os.Exit(1)
-	}
-
-	// Storage Capability Controllers
-	if err := (&storage.PVCReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"StoragePVC",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&storage.DeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"StorageDeployment",
-		)
-		os.Exit(1)
-	}
-
-	// Networking Capability Controllers
-	if err := (&networking.ServiceReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"NetworkingService",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&networking.IngressReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"NetworkingIngress",
-		)
-		os.Exit(1)
-	}
-
-	// Observability Capability Controllers
-	if err := (&observability.ServiceMonitorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"ObservabilityServiceMonitor",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&observability.PodMonitorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"ObservabilityPodMonitor",
-		)
-		os.Exit(1)
-	}
-
-	// Security Capability Controllers
-	if err := (&security.RoleReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"SecurityRole",
-		)
-		os.Exit(1)
-	}
-
-	if err := (&security.RoleBindingReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(
-			err,
-			"Failed to create controller",
-			"controller",
-			"SecurityRoleBinding",
-		)
-		os.Exit(1)
-	}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

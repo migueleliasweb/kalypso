@@ -1,27 +1,12 @@
-/*
-Copyright 2026.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 package workload
 
 import (
 	"context"
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -30,7 +15,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-// SecurityReconciler reconciles Security CRs for a Workload object
+// SecurityReconciler reconciles Security settings onto a shared WorkloadGraph KRO instance
 type SecurityReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -62,60 +47,85 @@ func (r *SecurityReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	securityName := fmt.Sprintf("%s-security", workload.Name)
+	// Initialize KRO WorkloadGraph instance
+	kroInstance := &unstructured.Unstructured{}
 
-	targetSecurity := &calypsov1alpha1.Security{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      securityName,
-			Namespace: targetNamespace,
-		},
-	}
+	kroInstance.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "kalypso.io",
+		Version: "v1alpha1",
+		Kind:    "WorkloadGraph",
+	})
 
-	if workload.Spec.Security.TargetRef.Resource == "" {
+	kroInstance.SetName(workload.Name)
 
-		var security calypsov1alpha1.Security
+	kroInstance.SetNamespace(targetNamespace)
 
-		if err := r.Get(
-			ctx,
-			client.ObjectKey{Namespace: targetNamespace, Name: securityName},
-			&security,
-		); err == nil {
+	// Determine if security capability settings are configured
+	securityActive := workload.Spec.Security.TargetRef.Resource != ""
 
-			if err := r.Delete(
-				ctx,
-				&security,
+	_, err := controllerutil.CreateOrPatch(
+		ctx,
+		r.Client,
+		kroInstance,
+		func() error {
+			if err := ctrl.SetControllerReference(
+				&workload,
+				kroInstance,
+				r.Scheme,
 			); err != nil {
-				return ctrl.Result{}, err
+				return fmt.Errorf("failed to set controller reference: %w", err)
 			}
 
-		}
+			unstructuredTargetRef, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&workload.Spec.TargetRef)
 
-	} else {
+			if err != nil {
+				return fmt.Errorf("failed to convert targetRef to unstructured: %w", err)
+			}
 
-		_, err := controllerutil.CreateOrUpdate(
-			ctx,
-			r.Client,
-			targetSecurity,
-			func() error {
-				targetSecurity.Spec = workload.Spec.Security
-				targetSecurity.Spec.TargetRef = workload.Spec.TargetRef
+			if err := unstructured.SetNestedField(
+				kroInstance.Object,
+				unstructuredTargetRef,
+				"spec",
+				"targetRef",
+			); err != nil {
+				return fmt.Errorf("failed to set targetRef: %w", err)
+			}
 
-				if err := ctrl.SetControllerReference(
-					&workload,
-					targetSecurity,
-					r.Scheme,
-				); err != nil {
-					return fmt.Errorf("failed to set controller reference on security: %w", err)
+			if securityActive {
+
+				workload.Spec.Security.TargetRef = workload.Spec.TargetRef
+
+				unstructuredSecurity, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&workload.Spec.Security)
+
+				if err != nil {
+					return fmt.Errorf("failed to convert security to unstructured: %w", err)
 				}
 
-				return nil
-			},
-		)
+				if err := unstructured.SetNestedField(
+					kroInstance.Object,
+					unstructuredSecurity,
+					"spec",
+					"security",
+				); err != nil {
+					return fmt.Errorf("failed to set security spec: %w", err)
+				}
 
-		if err != nil {
-			return ctrl.Result{}, err
-		}
+			} else {
 
+				unstructured.RemoveNestedField(
+					kroInstance.Object,
+					"spec",
+					"security",
+				)
+
+			}
+
+			return nil
+		},
+	)
+
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
@@ -125,9 +135,17 @@ func (r *SecurityReconciler) SetupWithManager(
 	mgr ctrl.Manager,
 ) error {
 
+	kroInstance := &unstructured.Unstructured{}
+
+	kroInstance.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "kalypso.io",
+		Version: "v1alpha1",
+		Kind:    "WorkloadGraph",
+	})
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Workload{}).
-		Owns(&calypsov1alpha1.Security{}).
+		Owns(kroInstance).
 		Named("workload-security").
 		Complete(r)
 }
