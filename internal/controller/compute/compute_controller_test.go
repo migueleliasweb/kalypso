@@ -55,6 +55,11 @@ var _ = Describe("Compute Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
+					Spec: calypsov1alpha1.ComputeSpec{
+						Autoscaling: calypsov1alpha1.AutoscalingSpec{
+							MaxReplicas: 1,
+						},
+					},
 				}
 
 				Expect(k8sClient.Create(
