@@ -1,0 +1,9 @@
+apiVersion: calypso.lmoet.io/v1alpha1
+kind: Security
+metadata:
+  labels:
+    app.kubernetes.io/name: kalypso
+    app.kubernetes.io/managed-by: kustomize
+  name: security-sample
+spec:
+  # TODO(user): Add fields here
