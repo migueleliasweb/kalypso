@@ -6,6 +6,7 @@ The rationale behind this project is to provide high-level CRDs to ease the adop
 
 - Written in Golang
 - This project will use the default `Kubebuilder` project style
+    - Each controller (reconciler) must only manage a single resource at a time to ensure simplicity and ease of debugging
 - Capability CRDs
     - Each CRD must expose one and only one capability
     - The CRD must be namespace scoped
