@@ -54,7 +54,7 @@ type PodMonitorSpec struct {
 type ObservabilitySpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef ResourceRef `json:"targetRef,omitempty"`
+	TargetRef TargetRef `json:"targetRef,omitempty"`
 
 	// ServiceMonitor enables Prometheus monitoring via ServiceMonitor resources.
 	// +optional

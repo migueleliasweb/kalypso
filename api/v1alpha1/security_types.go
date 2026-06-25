@@ -35,7 +35,7 @@ type RBACSpec struct {
 type SecuritySpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef ResourceRef `json:"targetRef,omitempty"`
+	TargetRef TargetRef `json:"targetRef,omitempty"`
 
 	// RBAC configures Role and RoleBinding for the workload.
 	// +optional

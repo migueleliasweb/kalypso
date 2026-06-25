@@ -61,7 +61,7 @@ func (r *SecurityReconciler) Reconcile(
 	kroInstance.SetNamespace(targetNamespace)
 
 	// Determine if security capability settings are configured
-	securityActive := workload.Spec.Security.TargetRef.Resource != ""
+	securityActive := workload.Spec.Security.TargetRef.Name != ""
 
 	_, err := controllerutil.CreateOrPatch(
 		ctx,

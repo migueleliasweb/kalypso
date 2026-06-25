@@ -44,7 +44,7 @@ type VolumeSpec struct {
 type StorageSpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef ResourceRef `json:"targetRef,omitempty"`
+	TargetRef TargetRef `json:"targetRef,omitempty"`
 
 	// StorageClassName to use for volume creation.
 	// +optional

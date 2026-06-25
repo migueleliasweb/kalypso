@@ -64,7 +64,7 @@ func (r *NetworkingReconciler) Reconcile(
 	networkingActive := len(workload.Spec.Networking.Service.Ports) > 0 ||
 		len(workload.Spec.Networking.Ingress.PrivateRoutes) > 0 ||
 		len(workload.Spec.Networking.Ingress.PublicRoutes) > 0 ||
-		workload.Spec.Networking.TargetRef.Resource != ""
+		workload.Spec.Networking.TargetRef.Name != ""
 
 	_, err := controllerutil.CreateOrPatch(
 		ctx,

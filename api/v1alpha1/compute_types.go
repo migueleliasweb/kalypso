@@ -71,7 +71,7 @@ type PDBSpec struct {
 type ComputeSpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef ResourceRef `json:"targetRef,omitempty"`
+	TargetRef TargetRef `json:"targetRef,omitempty"`
 
 	// Autoscaling defines HPA autoscaling configuration.
 	// +optional

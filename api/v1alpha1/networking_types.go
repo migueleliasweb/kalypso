@@ -70,7 +70,7 @@ type IngressSpec struct {
 type NetworkingSpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef ResourceRef `json:"targetRef,omitempty"`
+	TargetRef TargetRef `json:"targetRef,omitempty"`
 
 	// Service configures the Service for the target workload.
 	// +optional

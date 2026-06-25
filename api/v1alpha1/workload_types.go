@@ -24,7 +24,7 @@ import (
 type WorkloadSpec struct {
 	// TargetRef references the target resource (e.g. Deployment) that the capabilities apply to.
 	// +kubebuilder:validation:Required
-	TargetRef ResourceRef `json:"targetRef"`
+	TargetRef TargetRef `json:"targetRef"`
 
 	// Compute defines the compute capability settings.
 	// +optional

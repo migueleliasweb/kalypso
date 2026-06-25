@@ -61,7 +61,7 @@ func (r *ObservabilityReconciler) Reconcile(
 	kroInstance.SetNamespace(targetNamespace)
 
 	// Determine if observability capability settings are configured
-	observabilityActive := workload.Spec.Observability.TargetRef.Resource != ""
+	observabilityActive := workload.Spec.Observability.TargetRef.Name != ""
 
 	_, err := controllerutil.CreateOrPatch(
 		ctx,

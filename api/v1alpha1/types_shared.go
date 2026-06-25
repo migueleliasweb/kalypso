@@ -16,11 +16,11 @@ limitations under the License.
 
 package v1alpha1
 
-// ResourceRef represents a generic reference to a target Kubernetes resource.
-type ResourceRef struct {
-	// Resource is the name of the resource (e.g. "my-app").
+// TargetRef represents a generic reference to a target Kubernetes resource.
+type TargetRef struct {
+	// Name is the name of the resource (e.g. "my-app").
 	// +kubebuilder:validation:Required
-	Resource string `json:"resource"`
+	Name string `json:"resource"`
 
 	// Kind is the kind of the resource (e.g. "Deployment").
 	// +kubebuilder:validation:Required

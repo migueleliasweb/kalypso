@@ -61,7 +61,7 @@ func (r *StorageReconciler) Reconcile(
 	kroInstance.SetNamespace(targetNamespace)
 
 	// Determine if storage capability settings are configured
-	storageActive := workload.Spec.Storage.TargetRef.Resource != ""
+	storageActive := workload.Spec.Storage.TargetRef.Name != ""
 
 	_, err := controllerutil.CreateOrPatch(
 		ctx,
