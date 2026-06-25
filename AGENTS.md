@@ -301,6 +301,10 @@ export IMG=<registry>/<project>:<version>
 make docker-build docker-push IMG=$IMG
 ```
 
+## Coding Standards
+
+Refer to file [CODING_STANDARDS.md](CODING_STANDARDS.md).
+
 ## References
 
 ### Essential Reading
