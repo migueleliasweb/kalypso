@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package networking
+package security
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-var _ = Describe("Networking Controller", func() {
+var _ = Describe("Security Role Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,19 +38,19 @@ var _ = Describe("Networking Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		networking := &calypsov1alpha1.Networking{}
+		security := &calypsov1alpha1.Security{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Networking")
+			By("creating the custom resource for the Kind Security")
 
 			if err := k8sClient.Get(
 				ctx,
 				typeNamespacedName,
-				networking,
+				security,
 			); err != nil && errors.IsNotFound(err) {
-				resource := &calypsov1alpha1.Networking{
+				resource := &calypsov1alpha1.Security{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
@@ -65,7 +65,7 @@ var _ = Describe("Networking Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &calypsov1alpha1.Networking{}
+			resource := &calypsov1alpha1.Security{}
 
 			if err := k8sClient.Get(
 				ctx,
@@ -75,7 +75,7 @@ var _ = Describe("Networking Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			By("Cleanup the specific resource instance Networking")
+			By("Cleanup the specific resource instance Security")
 
 			Expect(k8sClient.Delete(
 				ctx,
@@ -85,7 +85,7 @@ var _ = Describe("Networking Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 
-			controllerReconciler := &NetworkingReconciler{
+			controllerReconciler := &RoleReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

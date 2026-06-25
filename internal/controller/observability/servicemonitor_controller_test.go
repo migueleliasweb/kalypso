@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package workload
+package observability
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-var _ = Describe("Workload Controller", func() {
+var _ = Describe("Observability ServiceMonitor Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,29 +38,22 @@ var _ = Describe("Workload Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		workload := &calypsov1alpha1.Workload{}
+		observability := &calypsov1alpha1.Observability{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Workload")
+			By("creating the custom resource for the Kind Observability")
 
 			if err := k8sClient.Get(
 				ctx,
 				typeNamespacedName,
-				workload,
+				observability,
 			); err != nil && errors.IsNotFound(err) {
-				resource := &calypsov1alpha1.Workload{
+				resource := &calypsov1alpha1.Observability{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
-					},
-					Spec: calypsov1alpha1.WorkloadSpec{
-						Compute: calypsov1alpha1.ComputeSpec{
-							Autoscaling: calypsov1alpha1.AutoscalingSpec{
-								MaxReplicas: 1,
-							},
-						},
 					},
 				}
 
@@ -72,7 +65,7 @@ var _ = Describe("Workload Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &calypsov1alpha1.Workload{}
+			resource := &calypsov1alpha1.Observability{}
 
 			if err := k8sClient.Get(
 				ctx,
@@ -82,7 +75,7 @@ var _ = Describe("Workload Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			By("Cleanup the specific resource instance Workload")
+			By("Cleanup the specific resource instance Observability")
 
 			Expect(k8sClient.Delete(
 				ctx,
@@ -92,7 +85,7 @@ var _ = Describe("Workload Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 
-			controllerReconciler := &WorkloadReconciler{
+			controllerReconciler := &ServiceMonitorReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

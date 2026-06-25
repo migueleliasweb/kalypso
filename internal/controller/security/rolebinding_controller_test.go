@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package compute
+package security
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-var _ = Describe("Compute Controller", func() {
+var _ = Describe("Security RoleBinding Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,27 +38,22 @@ var _ = Describe("Compute Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		compute := &calypsov1alpha1.Compute{}
+		security := &calypsov1alpha1.Security{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Compute")
+			By("creating the custom resource for the Kind Security")
 
 			if err := k8sClient.Get(
 				ctx,
 				typeNamespacedName,
-				compute,
+				security,
 			); err != nil && errors.IsNotFound(err) {
-				resource := &calypsov1alpha1.Compute{
+				resource := &calypsov1alpha1.Security{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
-					},
-					Spec: calypsov1alpha1.ComputeSpec{
-						Autoscaling: calypsov1alpha1.AutoscalingSpec{
-							MaxReplicas: 1,
-						},
 					},
 				}
 
@@ -70,7 +65,7 @@ var _ = Describe("Compute Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &calypsov1alpha1.Compute{}
+			resource := &calypsov1alpha1.Security{}
 
 			if err := k8sClient.Get(
 				ctx,
@@ -80,7 +75,7 @@ var _ = Describe("Compute Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			By("Cleanup the specific resource instance Compute")
+			By("Cleanup the specific resource instance Security")
 
 			Expect(k8sClient.Delete(
 				ctx,
@@ -90,7 +85,7 @@ var _ = Describe("Compute Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 
-			controllerReconciler := &ComputeReconciler{
+			controllerReconciler := &RoleBindingReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

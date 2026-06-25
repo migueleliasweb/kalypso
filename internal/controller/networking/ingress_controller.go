@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,20 +32,19 @@ import (
 	"github.com/migueleliasweb/kalypso/pkg/patch"
 )
 
-// NetworkingReconciler reconciles a Networking object
-type NetworkingReconciler struct {
+// IngressReconciler reconciles Ingress resources for a Networking object
+type IngressReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-func (r *NetworkingReconciler) Reconcile(
+func (r *IngressReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
 
 	log := logf.FromContext(ctx)
 
-	// 1. Fetch the Networking resource
 	var net calypsov1alpha1.Networking
 
 	if err := r.Get(
@@ -64,79 +62,6 @@ func (r *NetworkingReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	// 2. Reconcile Service
-	svcName := net.Spec.TargetRef.Resource
-
-	targetSvc := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      svcName,
-			Namespace: net.Namespace,
-		},
-	}
-
-	if len(net.Spec.Service.Ports) == 0 {
-
-		var svc corev1.Service
-
-		if err := r.Get(
-			ctx,
-			client.ObjectKey{Namespace: net.Namespace, Name: svcName},
-			&svc,
-		); err == nil {
-
-			if err := r.Delete(
-				ctx,
-				&svc,
-			); err != nil {
-				return ctrl.Result{}, err
-			}
-
-		}
-
-	} else {
-
-		_, err := controllerutil.CreateOrUpdate(
-			ctx,
-			r.Client,
-			targetSvc,
-			func() error {
-				targetSvc.Spec.Selector = map[string]string{
-					"app": net.Spec.TargetRef.Resource,
-				}
-				targetSvc.Spec.Ports = net.Spec.Service.Ports
-				targetSvc.Spec.Type = net.Spec.Service.Type
-
-				if err := ctrl.SetControllerReference(
-					&net,
-					targetSvc,
-					r.Scheme,
-				); err != nil {
-					return err
-				}
-
-				patchedSvcObj, err := patch.ApplyEscapeHatches(
-					targetSvc,
-					net.Spec.EscapeHatches,
-					"Service",
-				)
-
-				if err != nil {
-					return fmt.Errorf("failed to apply escape hatch to Service: %w", err)
-				}
-
-				*targetSvc = *(patchedSvcObj.(*corev1.Service))
-
-				return nil
-			},
-		)
-
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-	}
-
-	// 3. Reconcile Ingress
 	ingName := fmt.Sprintf("%s-ingress", net.Name)
 
 	targetIng := &networkingv1.Ingress{
@@ -325,15 +250,13 @@ func (r *NetworkingReconciler) Reconcile(
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *NetworkingReconciler) SetupWithManager(
+func (r *IngressReconciler) SetupWithManager(
 	mgr ctrl.Manager,
 ) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Networking{}).
-		Owns(&corev1.Service{}).
 		Owns(&networkingv1.Ingress{}).
-		Named("networking").
+		Named("networking-ingress").
 		Complete(r)
 }

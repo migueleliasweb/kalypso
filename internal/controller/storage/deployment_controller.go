@@ -23,32 +23,30 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 	"github.com/migueleliasweb/kalypso/pkg/patch"
 )
 
-// StorageReconciler reconciles a Storage object
-type StorageReconciler struct {
+// DeploymentReconciler patches target Deployments with volume mounts for a Storage object
+type DeploymentReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
 
-func (r *StorageReconciler) Reconcile(
+func (r *DeploymentReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
 ) (ctrl.Result, error) {
 
 	log := logf.FromContext(ctx)
 
-	// 1. Fetch the Storage resource
 	var storage calypsov1alpha1.Storage
 
 	if err := r.Get(
@@ -66,81 +64,6 @@ func (r *StorageReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	// 2. Reconcile PVCs
-	for _, vol := range storage.Spec.Volumes {
-
-		pvcName := fmt.Sprintf("%s-%s", storage.Name, vol.Name)
-
-		targetPVC := &corev1.PersistentVolumeClaim{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      pvcName,
-				Namespace: storage.Namespace,
-			},
-		}
-
-		_, err := controllerutil.CreateOrUpdate(
-			ctx,
-			r.Client,
-			targetPVC,
-			func() error {
-				accessModes := vol.AccessModes
-
-				if len(accessModes) == 0 {
-					accessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
-				}
-
-				quantity, err := resource.ParseQuantity(vol.Size)
-
-				if err != nil {
-					return fmt.Errorf("failed to parse volume size %q: %w", vol.Size, err)
-				}
-
-				var storageClassPtr *string
-
-				if storage.Spec.StorageClassName != "" {
-					scName := storage.Spec.StorageClassName
-					storageClassPtr = &scName
-				}
-
-				targetPVC.Spec.AccessModes = accessModes
-				targetPVC.Spec.Resources = corev1.VolumeResourceRequirements{
-					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: quantity,
-					},
-				}
-				targetPVC.Spec.StorageClassName = storageClassPtr
-
-				if err := ctrl.SetControllerReference(
-					&storage,
-					targetPVC,
-					r.Scheme,
-				); err != nil {
-					return err
-				}
-
-				patchedPVCObj, err := patch.ApplyEscapeHatches(
-					targetPVC,
-					storage.Spec.EscapeHatches,
-					"PersistentVolumeClaim",
-				)
-
-				if err != nil {
-					return fmt.Errorf("failed to apply escape hatch to PVC: %w", err)
-				}
-
-				*targetPVC = *(patchedPVCObj.(*corev1.PersistentVolumeClaim))
-
-				return nil
-			},
-		)
-
-		if err != nil {
-			return ctrl.Result{}, err
-		}
-
-	}
-
-	// 3. Patch Target Deployment
 	if storage.Spec.TargetRef.Kind == "Deployment" {
 
 		var deploy appsv1.Deployment
@@ -241,14 +164,55 @@ func (r *StorageReconciler) Reconcile(
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up the controller with the Manager.
-func (r *StorageReconciler) SetupWithManager(
+func (r *DeploymentReconciler) findStoragesForDeployment(
+	ctx context.Context,
+	obj client.Object,
+) []reconcile.Request {
+
+	deploy, ok := obj.(*appsv1.Deployment)
+
+	if !ok {
+		return nil
+	}
+
+	var list calypsov1alpha1.StorageList
+
+	if err := r.List(
+		ctx,
+		&list,
+		client.InNamespace(deploy.Namespace),
+	); err != nil {
+		return nil
+	}
+
+	var requests []reconcile.Request
+
+	for _, storage := range list.Items {
+		if storage.Spec.TargetRef.Resource != "" &&
+			storage.Spec.TargetRef.Kind == "Deployment" &&
+			storage.Spec.TargetRef.Resource == deploy.Name {
+			requests = append(requests, reconcile.Request{
+				NamespacedName: client.ObjectKey{
+					Namespace: storage.Namespace,
+					Name:      storage.Name,
+				},
+			})
+		}
+	}
+
+	return requests
+}
+
+func (r *DeploymentReconciler) SetupWithManager(
 	mgr ctrl.Manager,
 ) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Storage{}).
-		Owns(&corev1.PersistentVolumeClaim{}).
-		Named("storage").
+		Watches(
+			&appsv1.Deployment{},
+			handler.EnqueueRequestsFromMapFunc(r.findStoragesForDeployment),
+		).
+		Named("storage-deployment").
 		Complete(r)
 }

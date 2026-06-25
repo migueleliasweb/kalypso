@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package observability
+package storage
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-var _ = Describe("Observability Controller", func() {
+var _ = Describe("Storage PVC Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,19 +38,19 @@ var _ = Describe("Observability Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		observability := &calypsov1alpha1.Observability{}
+		storage := &calypsov1alpha1.Storage{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Observability")
+			By("creating the custom resource for the Kind Storage")
 
 			if err := k8sClient.Get(
 				ctx,
 				typeNamespacedName,
-				observability,
+				storage,
 			); err != nil && errors.IsNotFound(err) {
-				resource := &calypsov1alpha1.Observability{
+				resource := &calypsov1alpha1.Storage{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
@@ -65,7 +65,7 @@ var _ = Describe("Observability Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &calypsov1alpha1.Observability{}
+			resource := &calypsov1alpha1.Storage{}
 
 			if err := k8sClient.Get(
 				ctx,
@@ -75,7 +75,7 @@ var _ = Describe("Observability Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			By("Cleanup the specific resource instance Observability")
+			By("Cleanup the specific resource instance Storage")
 
 			Expect(k8sClient.Delete(
 				ctx,
@@ -85,7 +85,7 @@ var _ = Describe("Observability Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 
-			controllerReconciler := &ObservabilityReconciler{
+			controllerReconciler := &PVCReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}

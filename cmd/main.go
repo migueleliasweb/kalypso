@@ -181,99 +181,217 @@ func main() {
 		os.Exit(1)
 	}
 
-	workloadReconciler := &workload.WorkloadReconciler{
+	// Workload Capability Controllers
+	if err := (&workload.ComputeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := workloadReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"workload",
+			"WorkloadCompute",
 		)
-
 		os.Exit(1)
 	}
 
-	computeReconciler := &compute.ComputeReconciler{
+	if err := (&workload.StorageReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := computeReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"compute",
+			"WorkloadStorage",
 		)
-
 		os.Exit(1)
 	}
 
-	storageReconciler := &storage.StorageReconciler{
+	if err := (&workload.NetworkingReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := storageReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"storage",
+			"WorkloadNetworking",
 		)
-
 		os.Exit(1)
 	}
 
-	networkingReconciler := &networking.NetworkingReconciler{
+	if err := (&workload.ObservabilityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := networkingReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"networking",
+			"WorkloadObservability",
 		)
-
 		os.Exit(1)
 	}
 
-	observabilityReconciler := &observability.ObservabilityReconciler{
+	if err := (&workload.SecurityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := observabilityReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"observability",
+			"WorkloadSecurity",
 		)
-
 		os.Exit(1)
 	}
 
-	securityReconciler := &security.SecurityReconciler{
+	// Compute Capability Controllers
+	if err := (&compute.DeploymentReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}
-
-	if err := securityReconciler.SetupWithManager(mgr); err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(
 			err,
 			"Failed to create controller",
 			"controller",
-			"security",
+			"ComputeDeployment",
 		)
+		os.Exit(1)
+	}
 
+	if err := (&compute.HPAReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"ComputeHPA",
+		)
+		os.Exit(1)
+	}
+
+	if err := (&compute.PDBReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"ComputePDB",
+		)
+		os.Exit(1)
+	}
+
+	// Storage Capability Controllers
+	if err := (&storage.PVCReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"StoragePVC",
+		)
+		os.Exit(1)
+	}
+
+	if err := (&storage.DeploymentReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"StorageDeployment",
+		)
+		os.Exit(1)
+	}
+
+	// Networking Capability Controllers
+	if err := (&networking.ServiceReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"NetworkingService",
+		)
+		os.Exit(1)
+	}
+
+	if err := (&networking.IngressReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"NetworkingIngress",
+		)
+		os.Exit(1)
+	}
+
+	// Observability Capability Controllers
+	if err := (&observability.ServiceMonitorReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"ObservabilityServiceMonitor",
+		)
+		os.Exit(1)
+	}
+
+	if err := (&observability.PodMonitorReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"ObservabilityPodMonitor",
+		)
+		os.Exit(1)
+	}
+
+	// Security Capability Controllers
+	if err := (&security.RoleReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"SecurityRole",
+		)
+		os.Exit(1)
+	}
+
+	if err := (&security.RoleBindingReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"SecurityRoleBinding",
+		)
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

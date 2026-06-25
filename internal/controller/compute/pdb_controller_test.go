@@ -3,7 +3,7 @@ Copyright 2026.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+you may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package storage
+package compute
 
 import (
 	"context"
@@ -30,7 +30,7 @@ import (
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 )
 
-var _ = Describe("Storage Controller", func() {
+var _ = Describe("Compute PDB Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
 
@@ -38,22 +38,27 @@ var _ = Describe("Storage Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
-		storage := &calypsov1alpha1.Storage{}
+		compute := &calypsov1alpha1.Compute{}
 
 		BeforeEach(func() {
-			By("creating the custom resource for the Kind Storage")
+			By("creating the custom resource for the Kind Compute")
 
 			if err := k8sClient.Get(
 				ctx,
 				typeNamespacedName,
-				storage,
+				compute,
 			); err != nil && errors.IsNotFound(err) {
-				resource := &calypsov1alpha1.Storage{
+				resource := &calypsov1alpha1.Compute{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
+					},
+					Spec: calypsov1alpha1.ComputeSpec{
+						Autoscaling: calypsov1alpha1.AutoscalingSpec{
+							MaxReplicas: 1,
+						},
 					},
 				}
 
@@ -65,7 +70,7 @@ var _ = Describe("Storage Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &calypsov1alpha1.Storage{}
+			resource := &calypsov1alpha1.Compute{}
 
 			if err := k8sClient.Get(
 				ctx,
@@ -75,7 +80,7 @@ var _ = Describe("Storage Controller", func() {
 				Expect(err).NotTo(HaveOccurred())
 			}
 
-			By("Cleanup the specific resource instance Storage")
+			By("Cleanup the specific resource instance Compute")
 
 			Expect(k8sClient.Delete(
 				ctx,
@@ -85,7 +90,7 @@ var _ = Describe("Storage Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 
-			controllerReconciler := &StorageReconciler{
+			controllerReconciler := &PDBReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
