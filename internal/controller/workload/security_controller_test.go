@@ -57,7 +57,7 @@ var _ = Describe("Workload Security Controller", func() {
 					},
 					Spec: calypsov1alpha1.WorkloadSpec{
 						Security: calypsov1alpha1.SecuritySpec{
-							TargetRef: calypsov1alpha1.TargetRef{
+							TargetRef: calypsov1alpha1.ResourceRef{
 								Resource: "some-deployment",
 							},
 						},

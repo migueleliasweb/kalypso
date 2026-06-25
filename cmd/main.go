@@ -35,8 +35,9 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
 	krov1alpha1 "github.com/kubernetes-sigs/kro/api/v1alpha1"
+	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
+	"github.com/migueleliasweb/kalypso/internal/controller/kro"
 	"github.com/migueleliasweb/kalypso/internal/controller/workload"
 	// +kubebuilder:scaffold:imports
 )
@@ -180,7 +181,7 @@ func main() {
 	}
 
 	// KRO ResourceGraphDefinition Sync Controller
-	if err := (&workload.ResourceGraphDefinitionReconciler{
+	if err := (&kro.ResourceGraphDefinitionReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
