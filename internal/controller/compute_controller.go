@@ -43,12 +43,6 @@ type ComputeReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=computes,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=computes/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=computes/finalizers,verbs=update
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch
-// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop.
 func (r *ComputeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

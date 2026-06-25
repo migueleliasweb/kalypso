@@ -38,10 +38,6 @@ type SecurityReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=securities,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=securities/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=securities/finalizers,verbs=update
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=roles;rolebindings,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop.
 func (r *SecurityReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

@@ -39,11 +39,6 @@ type NetworkingReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=networkings,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=networkings/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=networkings/finalizers,verbs=update
-// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is part of the main kubernetes reconciliation loop.
 func (r *NetworkingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

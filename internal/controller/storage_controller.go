@@ -40,11 +40,6 @@ type StorageReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=storages,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=storages/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=storages/finalizers,verbs=update
-// +kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop.
 func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {

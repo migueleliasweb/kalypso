@@ -36,11 +36,6 @@ type WorkloadReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=workloads,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=workloads/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=workloads/finalizers,verbs=update
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=computes;storages;networkings;observabilities;securities,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=calypso.lmoet.io,resources=computes/status;storages/status;networkings/status;observabilities/status;securities/status,verbs=get;update;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop.
 func (r *WorkloadReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
