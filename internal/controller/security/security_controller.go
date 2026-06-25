@@ -14,18 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package security
 
 import (
 	"context"
 	"fmt"
 
 	rbacv1 "k8s.io/api/rbac/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
@@ -37,7 +37,6 @@ type SecurityReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
-
 
 func (r *SecurityReconciler) Reconcile(
 	ctx context.Context,
@@ -64,124 +63,15 @@ func (r *SecurityReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	// Reconcile RBAC
-	if err := r.reconcileRBAC(
-		ctx,
-		&sec,
-	); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *SecurityReconciler) reconcileRBAC(
-	ctx context.Context,
-	sec *calypsov1alpha1.Security,
-) error {
-
+	// 2. Reconcile RBAC
 	roleName := fmt.Sprintf("%s-role", sec.Name)
 	rbName := fmt.Sprintf("%s-rb", sec.Name)
-
-	var role rbacv1.Role
-
-	roleExists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: sec.Namespace, Name: roleName},
-		&role,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		roleExists = false
-	}
-
-	var rb rbacv1.RoleBinding
-
-	rbExists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: sec.Namespace, Name: rbName},
-		&rb,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		rbExists = false
-	}
-
-	if !sec.Spec.RBAC.CreateRole {
-
-		if roleExists {
-			if err := r.Delete(
-				ctx,
-				&role,
-			); err != nil {
-				return err
-			}
-		}
-
-		if rbExists {
-			if err := r.Delete(
-				ctx,
-				&rb,
-			); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
 
 	targetRole := &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      roleName,
 			Namespace: sec.Namespace,
 		},
-		Rules: sec.Spec.RBAC.Rules,
-	}
-
-	if err := ctrl.SetControllerReference(
-		sec,
-		targetRole,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	patchedRoleObj, err := patch.ApplyEscapeHatches(
-		targetRole,
-		sec.Spec.EscapeHatches,
-		"Role",
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to apply escape hatch to Role: %w", err)
-	}
-
-	targetRole = patchedRoleObj.(*rbacv1.Role)
-
-	if !roleExists {
-		if err := r.Create(
-			ctx,
-			targetRole,
-		); err != nil {
-			return err
-		}
-	} else {
-		targetRole.ResourceVersion = role.ResourceVersion
-
-		if err := r.Update(
-			ctx,
-			targetRole,
-		); err != nil {
-			return err
-		}
 	}
 
 	targetRB := &rbacv1.RoleBinding{
@@ -189,53 +79,132 @@ func (r *SecurityReconciler) reconcileRBAC(
 			Name:      rbName,
 			Namespace: sec.Namespace,
 		},
-		RoleRef: rbacv1.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "Role",
-			Name:     roleName,
-		},
-		Subjects: []rbacv1.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      sec.Spec.TargetRef.Resource,
-				Namespace: sec.Namespace,
-			},
-		},
 	}
 
-	if err := ctrl.SetControllerReference(
-		sec,
-		targetRB,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
+	if !sec.Spec.RBAC.CreateRole {
 
-	patchedRBObj, err := patch.ApplyEscapeHatches(
-		targetRB,
-		sec.Spec.EscapeHatches,
-		"RoleBinding",
-	)
+		var role rbacv1.Role
 
-	if err != nil {
-		return fmt.Errorf("failed to apply escape hatch to RoleBinding: %w", err)
-	}
-
-	targetRB = patchedRBObj.(*rbacv1.RoleBinding)
-
-	if !rbExists {
-		return r.Create(
+		if err := r.Get(
 			ctx,
-			targetRB,
+			client.ObjectKey{Namespace: sec.Namespace, Name: roleName},
+			&role,
+		); err == nil {
+
+			if err := r.Delete(
+				ctx,
+				&role,
+			); err != nil {
+				return ctrl.Result{}, err
+			}
+
+		}
+
+		var rb rbacv1.RoleBinding
+
+		if err := r.Get(
+			ctx,
+			client.ObjectKey{Namespace: sec.Namespace, Name: rbName},
+			&rb,
+		); err == nil {
+
+			if err := r.Delete(
+				ctx,
+				&rb,
+			); err != nil {
+				return ctrl.Result{}, err
+			}
+
+		}
+
+	} else {
+
+		// Reconcile Role
+		_, err := controllerutil.CreateOrUpdate(
+			ctx,
+			r.Client,
+			targetRole,
+			func() error {
+				targetRole.Rules = sec.Spec.RBAC.Rules
+
+				if err := ctrl.SetControllerReference(
+					&sec,
+					targetRole,
+					r.Scheme,
+				); err != nil {
+					return err
+				}
+
+				patchedRoleObj, err := patch.ApplyEscapeHatches(
+					targetRole,
+					sec.Spec.EscapeHatches,
+					"Role",
+				)
+
+				if err != nil {
+					return fmt.Errorf("failed to apply escape hatch to Role: %w", err)
+				}
+
+				*targetRole = *(patchedRoleObj.(*rbacv1.Role))
+
+				return nil
+			},
 		)
+
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// Reconcile RoleBinding
+		_, err = controllerutil.CreateOrUpdate(
+			ctx,
+			r.Client,
+			targetRB,
+			func() error {
+				targetRB.RoleRef = rbacv1.RoleRef{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "Role",
+					Name:     roleName,
+				}
+				targetRB.Subjects = []rbacv1.Subject{
+					{
+						Kind:      "ServiceAccount",
+						Name:      sec.Spec.TargetRef.Resource,
+						Namespace: sec.Namespace,
+					},
+				}
+
+				if err := ctrl.SetControllerReference(
+					&sec,
+					targetRB,
+					r.Scheme,
+				); err != nil {
+					return err
+				}
+
+				patchedRBObj, err := patch.ApplyEscapeHatches(
+					targetRB,
+					sec.Spec.EscapeHatches,
+					"RoleBinding",
+				)
+
+				if err != nil {
+					return fmt.Errorf("failed to apply escape hatch to RoleBinding: %w", err)
+				}
+
+				*targetRB = *(patchedRBObj.(*rbacv1.RoleBinding))
+
+				return nil
+			},
+		)
+
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 	}
 
-	targetRB.ResourceVersion = rb.ResourceVersion
-
-	return r.Update(
-		ctx,
-		targetRB,
-	)
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

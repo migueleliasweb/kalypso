@@ -14,18 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package observability
 
 import (
 	"context"
 	"fmt"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
@@ -36,7 +36,6 @@ type ObservabilityReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
-
 
 func (r *ObservabilityReconciler) Reconcile(
 	ctx context.Context,
@@ -63,61 +62,8 @@ func (r *ObservabilityReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	// Reconcile ServiceMonitor if enabled
-	if obs.Spec.ServiceMonitor.Enabled {
-
-		if err := r.reconcileServiceMonitor(
-			ctx,
-			&obs,
-		); err != nil {
-			return ctrl.Result{}, err
-		}
-
-	}
-
-	// Reconcile PodMonitor if enabled
-	if obs.Spec.PodMonitor.Enabled {
-
-		if err := r.reconcilePodMonitor(
-			ctx,
-			&obs,
-		); err != nil {
-			return ctrl.Result{}, err
-		}
-
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *ObservabilityReconciler) reconcileServiceMonitor(
-	ctx context.Context,
-	obs *calypsov1alpha1.Observability,
-) error {
-
-	name := fmt.Sprintf("%s-servicemonitor", obs.Name)
-
-	sm := &unstructured.Unstructured{}
-
-	sm.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "monitoring.coreos.com",
-		Version: "v1",
-		Kind:    "ServiceMonitor",
-	})
-
-	exists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: obs.Namespace, Name: name},
-		sm,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		exists = false
-	}
+	// 2. Reconcile ServiceMonitor
+	smName := fmt.Sprintf("%s-servicemonitor", obs.Name)
 
 	targetSM := &unstructured.Unstructured{}
 
@@ -127,88 +73,89 @@ func (r *ObservabilityReconciler) reconcileServiceMonitor(
 		Kind:    "ServiceMonitor",
 	})
 
-	targetSM.SetName(name)
+	targetSM.SetName(smName)
 	targetSM.SetNamespace(obs.Namespace)
 
-	path := "/metrics"
+	if !obs.Spec.ServiceMonitor.Enabled {
 
-	if obs.Spec.ServiceMonitor.Path != "" {
-		path = obs.Spec.ServiceMonitor.Path
-	}
+		var sm unstructured.Unstructured
 
-	interval := obs.Spec.ServiceMonitor.Interval
+		sm.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "monitoring.coreos.com",
+			Version: "v1",
+			Kind:    "ServiceMonitor",
+		})
 
-	if interval == "" {
-		interval = "30s"
-	}
-
-	spec := map[string]interface{}{
-		"selector": map[string]interface{}{
-			"matchLabels": map[string]interface{}{
-				"app": obs.Spec.TargetRef.Resource,
-			},
-		},
-		"endpoints": []interface{}{
-			map[string]interface{}{
-				"path":     path,
-				"interval": interval,
-			},
-		},
-	}
-
-	targetSM.Object["spec"] = spec
-
-	if err := ctrl.SetControllerReference(
-		obs,
-		targetSM,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	if !exists {
-		return r.Create(
+		if err := r.Get(
 			ctx,
-			targetSM,
-		)
-	}
+			client.ObjectKey{Namespace: obs.Namespace, Name: smName},
+			&sm,
+		); err == nil {
 
-	targetSM.SetResourceVersion(sm.GetResourceVersion())
+			if err := r.Delete(
+				ctx,
+				&sm,
+			); err != nil {
+				return ctrl.Result{}, err
+			}
 
-	return r.Update(
-		ctx,
-		targetSM,
-	)
-}
-
-func (r *ObservabilityReconciler) reconcilePodMonitor(
-	ctx context.Context,
-	obs *calypsov1alpha1.Observability,
-) error {
-
-	name := fmt.Sprintf("%s-podmonitor", obs.Name)
-
-	pm := &unstructured.Unstructured{}
-
-	pm.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "monitoring.coreos.com",
-		Version: "v1",
-		Kind:    "PodMonitor",
-	})
-
-	exists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: obs.Namespace, Name: name},
-		pm,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
 		}
 
-		exists = false
+	} else {
+
+		_, err := controllerutil.CreateOrUpdate(
+			ctx,
+			r.Client,
+			targetSM,
+			func() error {
+				path := "/metrics"
+
+				if obs.Spec.ServiceMonitor.Path != "" {
+					path = obs.Spec.ServiceMonitor.Path
+				}
+
+				interval := obs.Spec.ServiceMonitor.Interval
+
+				if interval == "" {
+					interval = "30s"
+				}
+
+				spec := map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
+							"app": obs.Spec.TargetRef.Resource,
+						},
+					},
+					"endpoints": []interface{}{
+						map[string]interface{}{
+							"path":     path,
+							"interval": interval,
+						},
+					},
+				}
+
+				targetSM.Object["spec"] = spec
+
+				if err := ctrl.SetControllerReference(
+					&obs,
+					targetSM,
+					r.Scheme,
+				); err != nil {
+					return err
+				}
+
+				return nil
+			},
+		)
+
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 	}
+
+	// 3. Reconcile PodMonitor
+	pmName := fmt.Sprintf("%s-podmonitor", obs.Name)
 
 	targetPM := &unstructured.Unstructured{}
 
@@ -218,58 +165,88 @@ func (r *ObservabilityReconciler) reconcilePodMonitor(
 		Kind:    "PodMonitor",
 	})
 
-	targetPM.SetName(name)
+	targetPM.SetName(pmName)
 	targetPM.SetNamespace(obs.Namespace)
 
-	path := "/metrics"
+	if !obs.Spec.PodMonitor.Enabled {
 
-	if obs.Spec.PodMonitor.Path != "" {
-		path = obs.Spec.PodMonitor.Path
-	}
+		var pm unstructured.Unstructured
 
-	interval := obs.Spec.PodMonitor.Interval
+		pm.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   "monitoring.coreos.com",
+			Version: "v1",
+			Kind:    "PodMonitor",
+		})
 
-	if interval == "" {
-		interval = "30s"
-	}
-
-	spec := map[string]interface{}{
-		"selector": map[string]interface{}{
-			"matchLabels": map[string]interface{}{
-				"app": obs.Spec.TargetRef.Resource,
-			},
-		},
-		"podMetricsEndpoints": []interface{}{
-			map[string]interface{}{
-				"path":     path,
-				"interval": interval,
-			},
-		},
-	}
-
-	targetPM.Object["spec"] = spec
-
-	if err := ctrl.SetControllerReference(
-		obs,
-		targetPM,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	if !exists {
-		return r.Create(
+		if err := r.Get(
 			ctx,
+			client.ObjectKey{Namespace: obs.Namespace, Name: pmName},
+			&pm,
+		); err == nil {
+
+			if err := r.Delete(
+				ctx,
+				&pm,
+			); err != nil {
+				return ctrl.Result{}, err
+			}
+
+		}
+
+	} else {
+
+		_, err := controllerutil.CreateOrUpdate(
+			ctx,
+			r.Client,
 			targetPM,
+			func() error {
+				path := "/metrics"
+
+				if obs.Spec.PodMonitor.Path != "" {
+					path = obs.Spec.PodMonitor.Path
+				}
+
+				interval := obs.Spec.PodMonitor.Interval
+
+				if interval == "" {
+					interval = "30s"
+				}
+
+				spec := map[string]interface{}{
+					"selector": map[string]interface{}{
+						"matchLabels": map[string]interface{}{
+							"app": obs.Spec.TargetRef.Resource,
+						},
+					},
+					"podMetricsEndpoints": []interface{}{
+						map[string]interface{}{
+							"path":     path,
+							"interval": interval,
+						},
+					},
+				}
+
+				targetPM.Object["spec"] = spec
+
+				if err := ctrl.SetControllerReference(
+					&obs,
+					targetPM,
+					r.Scheme,
+				); err != nil {
+					return err
+				}
+
+				return nil
+			},
 		)
+
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
 	}
 
-	targetPM.SetResourceVersion(pm.GetResourceVersion())
-
-	return r.Update(
-		ctx,
-		targetPM,
-	)
+	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

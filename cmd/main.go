@@ -36,7 +36,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
-	"github.com/migueleliasweb/kalypso/internal/controller"
+	"github.com/migueleliasweb/kalypso/internal/controller/compute"
+	"github.com/migueleliasweb/kalypso/internal/controller/networking"
+	"github.com/migueleliasweb/kalypso/internal/controller/observability"
+	"github.com/migueleliasweb/kalypso/internal/controller/security"
+	"github.com/migueleliasweb/kalypso/internal/controller/storage"
+	"github.com/migueleliasweb/kalypso/internal/controller/workload"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -176,7 +181,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	workloadReconciler := &controller.WorkloadReconciler{
+	workloadReconciler := &workload.WorkloadReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}
@@ -192,7 +197,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	computeReconciler := &controller.ComputeReconciler{
+	computeReconciler := &compute.ComputeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}
@@ -208,7 +213,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	storageReconciler := &controller.StorageReconciler{
+	storageReconciler := &storage.StorageReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}
@@ -224,7 +229,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	networkingReconciler := &controller.NetworkingReconciler{
+	networkingReconciler := &networking.NetworkingReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}
@@ -240,7 +245,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	observabilityReconciler := &controller.ObservabilityReconciler{
+	observabilityReconciler := &observability.ObservabilityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}
@@ -256,7 +261,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	securityReconciler := &controller.SecurityReconciler{
+	securityReconciler := &security.SecurityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}

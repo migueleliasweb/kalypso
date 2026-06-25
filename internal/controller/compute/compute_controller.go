@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package compute
 
 import (
 	"context"
@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -42,7 +43,6 @@ type ComputeReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
-
 
 func (r *ComputeReconciler) Reconcile(
 	ctx context.Context,
@@ -136,173 +136,88 @@ func (r *ComputeReconciler) Reconcile(
 	}
 
 	// 4. Reconcile HPA
-	if err := r.reconcileHPA(
-		ctx,
-		&compute,
-	); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	// 5. Reconcile PDB
-	if err := r.reconcilePDB(
-		ctx,
-		&compute,
-		&deploy,
-		deployFound,
-	); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
-}
-
-func (r *ComputeReconciler) reconcileHPA(
-	ctx context.Context,
-	compute *calypsov1alpha1.Compute,
-) error {
-
 	hpaName := fmt.Sprintf("%s-hpa", compute.Name)
-
-	var hpa autoscalingv2.HorizontalPodAutoscaler
-
-	exists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: compute.Namespace, Name: hpaName},
-		&hpa,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		exists = false
-	}
-
-	if compute.Spec.Autoscaling.MaxReplicas == 0 {
-
-		if exists {
-			return r.Delete(
-				ctx,
-				&hpa,
-			)
-		}
-
-		return nil
-	}
-
 	targetHPA := &autoscalingv2.HorizontalPodAutoscaler{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      hpaName,
 			Namespace: compute.Namespace,
 		},
-		Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
-			ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{
+	}
+
+	if compute.Spec.Autoscaling.MaxReplicas == 0 {
+		var hpa autoscalingv2.HorizontalPodAutoscaler
+		if err := r.Get(ctx, client.ObjectKey{Namespace: compute.Namespace, Name: hpaName}, &hpa); err == nil {
+			if err := r.Delete(ctx, &hpa); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		_, err := controllerutil.CreateOrUpdate(ctx, r.Client, targetHPA, func() error {
+			targetHPA.Spec.ScaleTargetRef = autoscalingv2.CrossVersionObjectReference{
 				APIVersion: compute.Spec.TargetRef.ApiVersion,
 				Kind:       compute.Spec.TargetRef.Kind,
 				Name:       compute.Spec.TargetRef.Resource,
-			},
-			MaxReplicas: compute.Spec.Autoscaling.MaxReplicas,
-		},
-	}
+			}
+			targetHPA.Spec.MaxReplicas = compute.Spec.Autoscaling.MaxReplicas
+			if compute.Spec.Autoscaling.MinReplicas > 0 {
+				minReps := compute.Spec.Autoscaling.MinReplicas
+				targetHPA.Spec.MinReplicas = &minReps
+			} else {
+				targetHPA.Spec.MinReplicas = nil
+			}
 
-	if compute.Spec.Autoscaling.MinReplicas > 0 {
-		minReps := compute.Spec.Autoscaling.MinReplicas
-		targetHPA.Spec.MinReplicas = &minReps
-	}
+			var metrics []autoscalingv2.MetricSpec
+			if compute.Spec.Autoscaling.TargetCPUUtilizationPercentage > 0 {
+				cpuVal := compute.Spec.Autoscaling.TargetCPUUtilizationPercentage
+				metrics = append(metrics, autoscalingv2.MetricSpec{
+					Type: autoscalingv2.ResourceMetricSourceType,
+					Resource: &autoscalingv2.ResourceMetricSource{
+						Name: corev1.ResourceCPU,
+						Target: autoscalingv2.MetricTarget{
+							Type:               autoscalingv2.UtilizationMetricType,
+							AverageUtilization: &cpuVal,
+						},
+					},
+				})
+			}
+			if compute.Spec.Autoscaling.TargetMemoryUtilizationPercentage > 0 {
+				memVal := compute.Spec.Autoscaling.TargetMemoryUtilizationPercentage
+				metrics = append(metrics, autoscalingv2.MetricSpec{
+					Type: autoscalingv2.ResourceMetricSourceType,
+					Resource: &autoscalingv2.ResourceMetricSource{
+						Name: corev1.ResourceMemory,
+						Target: autoscalingv2.MetricTarget{
+							Type:               autoscalingv2.UtilizationMetricType,
+							AverageUtilization: &memVal,
+						},
+					},
+				})
+			}
+			targetHPA.Spec.Metrics = metrics
 
-	var metrics []autoscalingv2.MetricSpec
+			if err := ctrl.SetControllerReference(&compute, targetHPA, r.Scheme); err != nil {
+				return err
+			}
 
-	if compute.Spec.Autoscaling.TargetCPUUtilizationPercentage > 0 {
-		cpuVal := compute.Spec.Autoscaling.TargetCPUUtilizationPercentage
-
-		metrics = append(metrics, autoscalingv2.MetricSpec{
-			Type: autoscalingv2.ResourceMetricSourceType,
-			Resource: &autoscalingv2.ResourceMetricSource{
-				Name: corev1.ResourceCPU,
-				Target: autoscalingv2.MetricTarget{
-					Type:               autoscalingv2.UtilizationMetricType,
-					AverageUtilization: &cpuVal,
-				},
-			},
+			patchedHPAObj, err := patch.ApplyEscapeHatches(targetHPA, compute.Spec.EscapeHatches, "HorizontalPodAutoscaler")
+			if err != nil {
+				return err
+			}
+			*targetHPA = *(patchedHPAObj.(*autoscalingv2.HorizontalPodAutoscaler))
+			return nil
 		})
-	}
-
-	if compute.Spec.Autoscaling.TargetMemoryUtilizationPercentage > 0 {
-		memVal := compute.Spec.Autoscaling.TargetMemoryUtilizationPercentage
-
-		metrics = append(metrics, autoscalingv2.MetricSpec{
-			Type: autoscalingv2.ResourceMetricSourceType,
-			Resource: &autoscalingv2.ResourceMetricSource{
-				Name: corev1.ResourceMemory,
-				Target: autoscalingv2.MetricTarget{
-					Type:               autoscalingv2.UtilizationMetricType,
-					AverageUtilization: &memVal,
-				},
-			},
-		})
-	}
-
-	targetHPA.Spec.Metrics = metrics
-
-	if err := ctrl.SetControllerReference(
-		compute,
-		targetHPA,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	patchedHPAObj, err := patch.ApplyEscapeHatches(
-		targetHPA,
-		compute.Spec.EscapeHatches,
-		"HorizontalPodAutoscaler",
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to apply escape hatch to HPA: %w", err)
-	}
-
-	targetHPA = patchedHPAObj.(*autoscalingv2.HorizontalPodAutoscaler)
-
-	if !exists {
-		return r.Create(
-			ctx,
-			targetHPA,
-		)
-	}
-
-	targetHPA.ResourceVersion = hpa.ResourceVersion
-
-	return r.Update(
-		ctx,
-		targetHPA,
-	)
-}
-
-func (r *ComputeReconciler) reconcilePDB(
-	ctx context.Context,
-	compute *calypsov1alpha1.Compute,
-	deploy *appsv1.Deployment,
-	deployFound bool,
-) error {
-
-	pdbName := fmt.Sprintf("%s-pdb", compute.Name)
-
-	var pdb policyv1.PodDisruptionBudget
-
-	exists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: compute.Namespace, Name: pdbName},
-		&pdb,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
+		if err != nil {
+			return ctrl.Result{}, err
 		}
+	}
 
-		exists = false
+	// 5. Reconcile PDB
+	pdbName := fmt.Sprintf("%s-pdb", compute.Name)
+	targetPDB := &policyv1.PodDisruptionBudget{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pdbName,
+			Namespace: compute.Namespace,
+		},
 	}
 
 	hasPDB := compute.Spec.PodDisruptionBudget.MinAvailable.IntVal > 0 ||
@@ -311,82 +226,53 @@ func (r *ComputeReconciler) reconcilePDB(
 		compute.Spec.PodDisruptionBudget.MaxUnavailable.StrVal != ""
 
 	if !hasPDB {
-
-		if exists {
-			return r.Delete(
-				ctx,
-				&pdb,
-			)
+		var pdb policyv1.PodDisruptionBudget
+		if err := r.Get(ctx, client.ObjectKey{Namespace: compute.Namespace, Name: pdbName}, &pdb); err == nil {
+			if err := r.Delete(ctx, &pdb); err != nil {
+				return ctrl.Result{}, err
+			}
 		}
-
-		return nil
-	}
-
-	var selector *metav1.LabelSelector
-
-	if deployFound && deploy.Spec.Selector != nil {
-		selector = deploy.Spec.Selector
 	} else {
-		selector = &metav1.LabelSelector{
-			MatchLabels: map[string]string{
-				"app": compute.Spec.TargetRef.Resource,
-			},
+		_, err := controllerutil.CreateOrUpdate(ctx, r.Client, targetPDB, func() error {
+			var selector *metav1.LabelSelector
+			if deployFound && deploy.Spec.Selector != nil {
+				selector = deploy.Spec.Selector
+			} else {
+				selector = &metav1.LabelSelector{
+					MatchLabels: map[string]string{
+						"app": compute.Spec.TargetRef.Resource,
+					},
+				}
+			}
+			targetPDB.Spec.Selector = selector
+
+			if compute.Spec.PodDisruptionBudget.MinAvailable.IntVal > 0 || compute.Spec.PodDisruptionBudget.MinAvailable.StrVal != "" {
+				minAvailableVal := compute.Spec.PodDisruptionBudget.MinAvailable
+				targetPDB.Spec.MinAvailable = &minAvailableVal
+				targetPDB.Spec.MaxUnavailable = nil
+			} else if compute.Spec.PodDisruptionBudget.MaxUnavailable.IntVal > 0 || compute.Spec.PodDisruptionBudget.MaxUnavailable.StrVal != "" {
+				maxUnavailableVal := compute.Spec.PodDisruptionBudget.MaxUnavailable
+				targetPDB.Spec.MaxUnavailable = &maxUnavailableVal
+				targetPDB.Spec.MinAvailable = nil
+			}
+
+			if err := ctrl.SetControllerReference(&compute, targetPDB, r.Scheme); err != nil {
+				return err
+			}
+
+			patchedPDBObj, err := patch.ApplyEscapeHatches(targetPDB, compute.Spec.EscapeHatches, "PodDisruptionBudget")
+			if err != nil {
+				return err
+			}
+			*targetPDB = *(patchedPDBObj.(*policyv1.PodDisruptionBudget))
+			return nil
+		})
+		if err != nil {
+			return ctrl.Result{}, err
 		}
 	}
 
-	targetPDB := &policyv1.PodDisruptionBudget{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      pdbName,
-			Namespace: compute.Namespace,
-		},
-		Spec: policyv1.PodDisruptionBudgetSpec{
-			Selector: selector,
-		},
-	}
-
-	if compute.Spec.PodDisruptionBudget.MinAvailable.IntVal > 0 || compute.Spec.PodDisruptionBudget.MinAvailable.StrVal != "" {
-		minAvailableVal := compute.Spec.PodDisruptionBudget.MinAvailable
-		targetPDB.Spec.MinAvailable = &minAvailableVal
-	}
-
-	if compute.Spec.PodDisruptionBudget.MaxUnavailable.IntVal > 0 || compute.Spec.PodDisruptionBudget.MaxUnavailable.StrVal != "" {
-		maxUnavailableVal := compute.Spec.PodDisruptionBudget.MaxUnavailable
-		targetPDB.Spec.MaxUnavailable = &maxUnavailableVal
-	}
-
-	if err := ctrl.SetControllerReference(
-		compute,
-		targetPDB,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	patchedPDBObj, err := patch.ApplyEscapeHatches(
-		targetPDB,
-		compute.Spec.EscapeHatches,
-		"PodDisruptionBudget",
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to apply escape hatch to PDB: %w", err)
-	}
-
-	targetPDB = patchedPDBObj.(*policyv1.PodDisruptionBudget)
-
-	if !exists {
-		return r.Create(
-			ctx,
-			targetPDB,
-		)
-	}
-
-	targetPDB.ResourceVersion = pdb.ResourceVersion
-
-	return r.Update(
-		ctx,
-		targetPDB,
-	)
+	return ctrl.Result{}, nil
 }
 
 func (r *ComputeReconciler) findComputesForDeployment(

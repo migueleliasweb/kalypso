@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controller
+package storage
 
 import (
 	"context"
@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	calypsov1alpha1 "github.com/migueleliasweb/kalypso/api/v1alpha1"
@@ -39,7 +40,6 @@ type StorageReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
-
 
 func (r *StorageReconciler) Reconcile(
 	ctx context.Context,
@@ -69,11 +69,72 @@ func (r *StorageReconciler) Reconcile(
 	// 2. Reconcile PVCs
 	for _, vol := range storage.Spec.Volumes {
 
-		if err := r.reconcilePVC(
+		pvcName := fmt.Sprintf("%s-%s", storage.Name, vol.Name)
+
+		targetPVC := &corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      pvcName,
+				Namespace: storage.Namespace,
+			},
+		}
+
+		_, err := controllerutil.CreateOrUpdate(
 			ctx,
-			&storage,
-			vol,
-		); err != nil {
+			r.Client,
+			targetPVC,
+			func() error {
+				accessModes := vol.AccessModes
+
+				if len(accessModes) == 0 {
+					accessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
+				}
+
+				quantity, err := resource.ParseQuantity(vol.Size)
+
+				if err != nil {
+					return fmt.Errorf("failed to parse volume size %q: %w", vol.Size, err)
+				}
+
+				var storageClassPtr *string
+
+				if storage.Spec.StorageClassName != "" {
+					scName := storage.Spec.StorageClassName
+					storageClassPtr = &scName
+				}
+
+				targetPVC.Spec.AccessModes = accessModes
+				targetPVC.Spec.Resources = corev1.VolumeResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: quantity,
+					},
+				}
+				targetPVC.Spec.StorageClassName = storageClassPtr
+
+				if err := ctrl.SetControllerReference(
+					&storage,
+					targetPVC,
+					r.Scheme,
+				); err != nil {
+					return err
+				}
+
+				patchedPVCObj, err := patch.ApplyEscapeHatches(
+					targetPVC,
+					storage.Spec.EscapeHatches,
+					"PersistentVolumeClaim",
+				)
+
+				if err != nil {
+					return fmt.Errorf("failed to apply escape hatch to PVC: %w", err)
+				}
+
+				*targetPVC = *(patchedPVCObj.(*corev1.PersistentVolumeClaim))
+
+				return nil
+			},
+		)
+
+		if err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -178,100 +239,6 @@ func (r *StorageReconciler) Reconcile(
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *StorageReconciler) reconcilePVC(
-	ctx context.Context,
-	storage *calypsov1alpha1.Storage,
-	vol calypsov1alpha1.VolumeSpec,
-) error {
-
-	pvcName := fmt.Sprintf("%s-%s", storage.Name, vol.Name)
-
-	var pvc corev1.PersistentVolumeClaim
-
-	exists := true
-
-	if err := r.Get(
-		ctx,
-		client.ObjectKey{Namespace: storage.Namespace, Name: pvcName},
-		&pvc,
-	); err != nil {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-
-		exists = false
-	}
-
-	accessModes := vol.AccessModes
-
-	if len(accessModes) == 0 {
-		accessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
-	}
-
-	quantity, err := resource.ParseQuantity(vol.Size)
-
-	if err != nil {
-		return fmt.Errorf("failed to parse volume size %q: %w", vol.Size, err)
-	}
-
-	var storageClassPtr *string
-
-	if storage.Spec.StorageClassName != "" {
-		scName := storage.Spec.StorageClassName
-		storageClassPtr = &scName
-	}
-
-	targetPVC := &corev1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      pvcName,
-			Namespace: storage.Namespace,
-		},
-		Spec: corev1.PersistentVolumeClaimSpec{
-			AccessModes: accessModes,
-			Resources: corev1.VolumeResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceStorage: quantity,
-				},
-			},
-			StorageClassName: storageClassPtr,
-		},
-	}
-
-	if err := ctrl.SetControllerReference(
-		storage,
-		targetPVC,
-		r.Scheme,
-	); err != nil {
-		return err
-	}
-
-	patchedPVCObj, err := patch.ApplyEscapeHatches(
-		targetPVC,
-		storage.Spec.EscapeHatches,
-		"PersistentVolumeClaim",
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to apply escape hatch to PVC: %w", err)
-	}
-
-	targetPVC = patchedPVCObj.(*corev1.PersistentVolumeClaim)
-
-	if !exists {
-		return r.Create(
-			ctx,
-			targetPVC,
-		)
-	}
-
-	targetPVC.ResourceVersion = pvc.ResourceVersion
-
-	return r.Update(
-		ctx,
-		targetPVC,
-	)
 }
 
 // SetupWithManager sets up the controller with the Manager.
