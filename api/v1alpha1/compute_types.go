@@ -26,7 +26,7 @@ import (
 type AutoscalingSpec struct {
 	// MinReplicas is the lower limit for the number of replicas.
 	// +optional
-	MinReplicas *int32 `json:"minReplicas,omitempty"`
+	MinReplicas int32 `json:"minReplicas,omitempty"`
 
 	// MaxReplicas is the upper limit for the number of replicas.
 	// +kubebuilder:validation:Minimum=1
@@ -34,11 +34,11 @@ type AutoscalingSpec struct {
 
 	// TargetCPUUtilizationPercentage is the target average CPU utilization percentage.
 	// +optional
-	TargetCPUUtilizationPercentage *int32 `json:"targetCPUUtilizationPercentage,omitempty"`
+	TargetCPUUtilizationPercentage int32 `json:"targetCPUUtilizationPercentage,omitempty"`
 
 	// TargetMemoryUtilizationPercentage is the target average memory utilization percentage.
 	// +optional
-	TargetMemoryUtilizationPercentage *int32 `json:"targetMemoryUtilizationPercentage,omitempty"`
+	TargetMemoryUtilizationPercentage int32 `json:"targetMemoryUtilizationPercentage,omitempty"`
 }
 
 // SchedulingSpec defines the scheduling criteria for pods.
@@ -49,7 +49,7 @@ type SchedulingSpec struct {
 
 	// Affinity defines scheduling constraints (node affinity, pod affinity, pod anti-affinity).
 	// +optional
-	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+	Affinity corev1.Affinity `json:"affinity,omitempty"`
 
 	// TopologySpreadConstraints describes how a group of pods ought to spread across topology domains.
 	// +optional
@@ -60,30 +60,30 @@ type SchedulingSpec struct {
 type PDBSpec struct {
 	// MinAvailable is the minimum number of pods that must be available.
 	// +optional
-	MinAvailable *intstr.IntOrString `json:"minAvailable,omitempty"`
+	MinAvailable intstr.IntOrString `json:"minAvailable,omitempty"`
 
 	// MaxUnavailable is the maximum number of pods that can be unavailable.
 	// +optional
-	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
+	MaxUnavailable intstr.IntOrString `json:"maxUnavailable,omitempty"`
 }
 
 // ComputeSpec defines the desired state of Compute
 type ComputeSpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef *ResourceRef `json:"targetRef,omitempty"`
+	TargetRef ResourceRef `json:"targetRef,omitempty"`
 
 	// Autoscaling defines HPA autoscaling configuration.
 	// +optional
-	Autoscaling *AutoscalingSpec `json:"autoscaling,omitempty"`
+	Autoscaling AutoscalingSpec `json:"autoscaling,omitempty"`
 
 	// Scheduling defines node affinity, node selector, and topology spread rules.
 	// +optional
-	Scheduling *SchedulingSpec `json:"scheduling,omitempty"`
+	Scheduling SchedulingSpec `json:"scheduling,omitempty"`
 
 	// PodDisruptionBudget defines the PDB configuration.
 	// +optional
-	PodDisruptionBudget *PDBSpec `json:"podDisruptionBudget,omitempty"`
+	PodDisruptionBudget PDBSpec `json:"podDisruptionBudget,omitempty"`
 
 	// EscapeHatches allows applying raw patches to the target resource or managed HPAs/PDBs.
 	// +optional

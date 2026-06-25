@@ -41,37 +41,60 @@ type StorageReconciler struct {
 }
 
 
-// Reconcile is part of the main kubernetes reconciliation loop.
-func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *StorageReconciler) Reconcile(
+	ctx context.Context,
+	req ctrl.Request,
+) (ctrl.Result, error) {
+
 	log := logf.FromContext(ctx)
 
 	// 1. Fetch the Storage resource
 	var storage calypsov1alpha1.Storage
-	if err := r.Get(ctx, req.NamespacedName, &storage); err != nil {
+
+	if err := r.Get(
+		ctx,
+		req.NamespacedName,
+		&storage,
+	); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if storage.Spec.TargetRef == nil {
+	if storage.Spec.TargetRef.Resource == "" {
+
 		log.Info("Storage targetRef is nil, skipping reconciliation", "name", storage.Name)
+
 		return ctrl.Result{}, nil
 	}
 
 	// 2. Reconcile PVCs
 	for _, vol := range storage.Spec.Volumes {
-		if err := r.reconcilePVC(ctx, &storage, vol); err != nil {
+
+		if err := r.reconcilePVC(
+			ctx,
+			&storage,
+			vol,
+		); err != nil {
 			return ctrl.Result{}, err
 		}
+
 	}
 
 	// 3. Patch Target Deployment
 	if storage.Spec.TargetRef.Kind == "Deployment" {
+
 		var deploy appsv1.Deployment
-		err := r.Get(ctx, client.ObjectKey{Namespace: storage.Namespace, Name: storage.Spec.TargetRef.Resource}, &deploy)
-		if err != nil {
+
+		if err := r.Get(
+			ctx,
+			client.ObjectKey{Namespace: storage.Namespace, Name: storage.Spec.TargetRef.Resource},
+			&deploy,
+		); err != nil {
 			if apierrors.IsNotFound(err) {
 				log.Info("Target Deployment not found", "name", storage.Spec.TargetRef.Resource)
+
 				return ctrl.Result{}, nil
 			}
+
 			return ctrl.Result{}, err
 		}
 
@@ -81,6 +104,7 @@ func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			pvcName := fmt.Sprintf("%s-%s", storage.Name, vol.Name)
 
 			volumeExists := false
+
 			for i, v := range deploy.Spec.Template.Spec.Volumes {
 				if v.Name == vol.Name {
 					deploy.Spec.Template.Spec.Volumes[i].VolumeSource = corev1.VolumeSource{
@@ -88,10 +112,13 @@ func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 							ClaimName: pvcName,
 						},
 					}
+
 					volumeExists = true
+
 					break
 				}
 			}
+
 			if !volumeExists {
 				deploy.Spec.Template.Spec.Volumes = append(deploy.Spec.Template.Spec.Volumes, corev1.Volume{
 					Name: vol.Name,
@@ -105,13 +132,17 @@ func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 			if len(deploy.Spec.Template.Spec.Containers) > 0 {
 				mountExists := false
+
 				for i, m := range deploy.Spec.Template.Spec.Containers[0].VolumeMounts {
 					if m.Name == vol.Name {
 						deploy.Spec.Template.Spec.Containers[0].VolumeMounts[i].MountPath = vol.MountPath
+
 						mountExists = true
+
 						break
 					}
 				}
+
 				if !mountExists {
 					deploy.Spec.Template.Spec.Containers[0].VolumeMounts = append(
 						deploy.Spec.Template.Spec.Containers[0].VolumeMounts,
@@ -124,33 +155,72 @@ func (r *StorageReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			}
 		}
 
-		patchedDeployObj, err := patch.ApplyEscapeHatches(&deploy, storage.Spec.EscapeHatches, "Deployment")
+		patchedDeployObj, err := patch.ApplyEscapeHatches(
+			&deploy,
+			storage.Spec.EscapeHatches,
+			"Deployment",
+		)
+
 		if err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to apply escape hatch to Deployment: %w", err)
 		}
+
 		deploy = *(patchedDeployObj.(*appsv1.Deployment))
 
-		if err := r.Patch(ctx, &deploy, client.MergeFrom(originalDeploy)); err != nil {
+		if err := r.Patch(
+			ctx,
+			&deploy,
+			client.MergeFrom(originalDeploy),
+		); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to patch deployment with volumes: %w", err)
 		}
+
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *StorageReconciler) reconcilePVC(ctx context.Context, storage *calypsov1alpha1.Storage, vol calypsov1alpha1.VolumeSpec) error {
+func (r *StorageReconciler) reconcilePVC(
+	ctx context.Context,
+	storage *calypsov1alpha1.Storage,
+	vol calypsov1alpha1.VolumeSpec,
+) error {
+
 	pvcName := fmt.Sprintf("%s-%s", storage.Name, vol.Name)
+
 	var pvc corev1.PersistentVolumeClaim
-	pvcErr := r.Get(ctx, client.ObjectKey{Namespace: storage.Namespace, Name: pvcName}, &pvc)
+
+	exists := true
+
+	if err := r.Get(
+		ctx,
+		client.ObjectKey{Namespace: storage.Namespace, Name: pvcName},
+		&pvc,
+	); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
+		}
+
+		exists = false
+	}
 
 	accessModes := vol.AccessModes
+
 	if len(accessModes) == 0 {
 		accessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 	}
 
 	quantity, err := resource.ParseQuantity(vol.Size)
+
 	if err != nil {
 		return fmt.Errorf("failed to parse volume size %q: %w", vol.Size, err)
+	}
+
+	var storageClassPtr *string
+
+	if storage.Spec.StorageClassName != "" {
+		scName := storage.Spec.StorageClassName
+		storageClassPtr = &scName
 	}
 
 	targetPVC := &corev1.PersistentVolumeClaim{
@@ -165,33 +235,50 @@ func (r *StorageReconciler) reconcilePVC(ctx context.Context, storage *calypsov1
 					corev1.ResourceStorage: quantity,
 				},
 			},
-			StorageClassName: storage.Spec.StorageClassName,
+			StorageClassName: storageClassPtr,
 		},
 	}
 
-	if err := ctrl.SetControllerReference(storage, targetPVC, r.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(
+		storage,
+		targetPVC,
+		r.Scheme,
+	); err != nil {
 		return err
 	}
 
-	patchedPVCObj, err := patch.ApplyEscapeHatches(targetPVC, storage.Spec.EscapeHatches, "PersistentVolumeClaim")
+	patchedPVCObj, err := patch.ApplyEscapeHatches(
+		targetPVC,
+		storage.Spec.EscapeHatches,
+		"PersistentVolumeClaim",
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to apply escape hatch to PVC: %w", err)
 	}
+
 	targetPVC = patchedPVCObj.(*corev1.PersistentVolumeClaim)
 
-	if pvcErr != nil {
-		if apierrors.IsNotFound(pvcErr) {
-			return r.Create(ctx, targetPVC)
-		}
-		return pvcErr
+	if !exists {
+		return r.Create(
+			ctx,
+			targetPVC,
+		)
 	}
 
 	targetPVC.ResourceVersion = pvc.ResourceVersion
-	return r.Update(ctx, targetPVC)
+
+	return r.Update(
+		ctx,
+		targetPVC,
+	)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *StorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *StorageReconciler) SetupWithManager(
+	mgr ctrl.Manager,
+) error {
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Storage{}).
 		Owns(&corev1.PersistentVolumeClaim{}).

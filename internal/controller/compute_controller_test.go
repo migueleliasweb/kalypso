@@ -44,41 +44,60 @@ var _ = Describe("Compute Controller", func() {
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Compute")
-			err := k8sClient.Get(ctx, typeNamespacedName, compute)
-			if err != nil && errors.IsNotFound(err) {
+
+			if err := k8sClient.Get(
+				ctx,
+				typeNamespacedName,
+				compute,
+			); err != nil && errors.IsNotFound(err) {
 				resource := &calypsov1alpha1.Compute{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
 				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+				Expect(k8sClient.Create(
+					ctx,
+					resource,
+				)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &calypsov1alpha1.Compute{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+
+			if err := k8sClient.Get(
+				ctx,
+				typeNamespacedName,
+				resource,
+			); err != nil {
+				Expect(err).NotTo(HaveOccurred())
+			}
 
 			By("Cleanup the specific resource instance Compute")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+
+			Expect(k8sClient.Delete(
+				ctx,
+				resource,
+			)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
+
 			controllerReconciler := &ComputeReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
+			_, err := controllerReconciler.Reconcile(
+				ctx,
+				reconcile.Request{
+					NamespacedName: typeNamespacedName,
+				},
+			)
+
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })

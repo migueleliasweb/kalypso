@@ -27,7 +27,12 @@ import (
 
 // ApplyEscapeHatches applies a list of EscapeHatch patches to a Kubernetes runtime.Object.
 // It filters the hatches by the object's resource Kind and applies the matching patches sequentially.
-func ApplyEscapeHatches(obj runtime.Object, hatches []v1alpha1.EscapeHatch, targetKind string) (runtime.Object, error) {
+func ApplyEscapeHatches(
+	obj runtime.Object,
+	hatches []v1alpha1.EscapeHatch,
+	targetKind string,
+) (runtime.Object, error) {
+
 	patchedObj := obj.DeepCopyObject()
 
 	for _, hatch := range hatches {
@@ -37,24 +42,30 @@ func ApplyEscapeHatches(obj runtime.Object, hatches []v1alpha1.EscapeHatch, targ
 
 		// Convert object to JSON
 		originalJSON, err := json.Marshal(patchedObj)
+
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal object of kind %s to JSON: %w", targetKind, err)
 		}
 
 		var patchedJSON []byte
+
 		switch hatch.PatchType {
 		case "JSONPatch":
 			patch, err := jsonpatch.DecodePatch([]byte(hatch.Patch))
+
 			if err != nil {
 				return nil, fmt.Errorf("failed to decode JSONPatch for kind %s: %w", targetKind, err)
 			}
+
 			patchedJSON, err = patch.Apply(originalJSON)
+
 			if err != nil {
 				return nil, fmt.Errorf("failed to apply JSONPatch for kind %s: %w", targetKind, err)
 			}
 
 		case "JSONMergePatch":
 			patchedJSON, err = jsonpatch.MergePatch(originalJSON, []byte(hatch.Patch))
+
 			if err != nil {
 				return nil, fmt.Errorf("failed to apply JSONMergePatch for kind %s: %w", targetKind, err)
 			}
@@ -64,7 +75,10 @@ func ApplyEscapeHatches(obj runtime.Object, hatches []v1alpha1.EscapeHatch, targ
 		}
 
 		// Unmarshal back to object
-		if err := json.Unmarshal(patchedJSON, patchedObj); err != nil {
+		if err := json.Unmarshal(
+			patchedJSON,
+			patchedObj,
+		); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal patched JSON back to object of kind %s: %w", targetKind, err)
 		}
 	}

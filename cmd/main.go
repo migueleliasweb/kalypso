@@ -123,6 +123,7 @@ func main() {
 	// More info:
 	// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.23.3/pkg/metrics/server
 	// - https://book.kubebuilder.io/reference/metrics.html
+
 	metricsServerOptions := metricsserver.Options{
 		BindAddress:   metricsAddr,
 		SecureServing: secureMetrics,
@@ -154,70 +155,120 @@ func main() {
 		metricsServerOptions.KeyName = metricsCertKey
 	}
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		Metrics:                metricsServerOptions,
-		WebhookServer:          webhookServer,
-		HealthProbeBindAddress: probeAddr,
-		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "33e9e80b.lmoet.io",
-		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
-		// speeds up voluntary leader transitions as the new leader don't have to wait
-		// LeaseDuration time first.
-		//
-		// In the default scaffold provided, the program ends immediately after
-		// the manager stops, so would be fine to enable this option. However,
-		// if you are doing or is intended to do any operation such as perform cleanups
-		// after the manager stops then its usage might be unsafe.
-		// LeaderElectionReleaseOnCancel: true,
-	})
+	mgr, err := ctrl.NewManager(
+		ctrl.GetConfigOrDie(),
+		ctrl.Options{
+			Scheme:                 scheme,
+			Metrics:                metricsServerOptions,
+			WebhookServer:          webhookServer,
+			HealthProbeBindAddress: probeAddr,
+			LeaderElection:         enableLeaderElection,
+			LeaderElectionID:       "33e9e80b.lmoet.io",
+		},
+	)
+
 	if err != nil {
-		setupLog.Error(err, "Failed to start manager")
+		setupLog.Error(
+			err,
+			"Failed to start manager",
+		)
+
 		os.Exit(1)
 	}
 
-	if err := (&controller.WorkloadReconciler{
+	workloadReconciler := &controller.WorkloadReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "workload")
+	}
+
+	if err := workloadReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"workload",
+		)
+
 		os.Exit(1)
 	}
-	if err := (&controller.ComputeReconciler{
+
+	computeReconciler := &controller.ComputeReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "compute")
+	}
+
+	if err := computeReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"compute",
+		)
+
 		os.Exit(1)
 	}
-	if err := (&controller.StorageReconciler{
+
+	storageReconciler := &controller.StorageReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "storage")
+	}
+
+	if err := storageReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"storage",
+		)
+
 		os.Exit(1)
 	}
-	if err := (&controller.NetworkingReconciler{
+
+	networkingReconciler := &controller.NetworkingReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "networking")
+	}
+
+	if err := networkingReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"networking",
+		)
+
 		os.Exit(1)
 	}
-	if err := (&controller.ObservabilityReconciler{
+
+	observabilityReconciler := &controller.ObservabilityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "observability")
+	}
+
+	if err := observabilityReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"observability",
+		)
+
 		os.Exit(1)
 	}
-	if err := (&controller.SecurityReconciler{
+
+	securityReconciler := &controller.SecurityReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "security")
+	}
+
+	if err := securityReconciler.SetupWithManager(mgr); err != nil {
+		setupLog.Error(
+			err,
+			"Failed to create controller",
+			"controller",
+			"security",
+		)
+
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

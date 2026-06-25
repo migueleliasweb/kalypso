@@ -15,11 +15,21 @@
             // Handle error
         }
         ```
+
 # Kubernetes Controller Reconcilers
 
 ## Single-purpose reconcilers
 
 Each reconciler should manage the lifecycle of a single resource at a time. This way, we can ensure retries and alerts can be more details and provide better understanding of what is going on inside the Controller as a whole.
+
+Consider grouping the reconcilers in folder with the capabiltiy they are related to. Ask the user if you need clarification. 
+
+E.g:
+
+- `internal/controller/<capability>/<kind>_controller.go`
+- `internal/controller/networking/virtual_service_controller.go`
+- `internal/controller/networking/service_controller.go`
+- `internal/controller/networking/destination_rule_controller.go`
 
 ## The `Reconcile()` method and mutating state
 

@@ -40,43 +40,82 @@ type NetworkingReconciler struct {
 }
 
 
-// Reconcile is part of the main kubernetes reconciliation loop.
-func (r *NetworkingReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *NetworkingReconciler) Reconcile(
+	ctx context.Context,
+	req ctrl.Request,
+) (ctrl.Result, error) {
+
 	log := logf.FromContext(ctx)
 
 	// 1. Fetch the Networking resource
 	var net calypsov1alpha1.Networking
-	if err := r.Get(ctx, req.NamespacedName, &net); err != nil {
+
+	if err := r.Get(
+		ctx,
+		req.NamespacedName,
+		&net,
+	); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if net.Spec.TargetRef == nil {
+	if net.Spec.TargetRef.Resource == "" {
+
 		log.Info("Networking targetRef is nil, skipping reconciliation", "name", net.Name)
+
 		return ctrl.Result{}, nil
 	}
 
 	// 2. Reconcile Service
-	if err := r.reconcileService(ctx, &net); err != nil {
+	if err := r.reconcileService(
+		ctx,
+		&net,
+	); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	// 3. Reconcile Ingress
-	if err := r.reconcileIngress(ctx, &net); err != nil {
+	if err := r.reconcileIngress(
+		ctx,
+		&net,
+	); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *NetworkingReconciler) reconcileService(ctx context.Context, net *calypsov1alpha1.Networking) error {
-	svcName := net.Spec.TargetRef.Resource
-	var svc corev1.Service
-	svcErr := r.Get(ctx, client.ObjectKey{Namespace: net.Namespace, Name: svcName}, &svc)
+func (r *NetworkingReconciler) reconcileService(
+	ctx context.Context,
+	net *calypsov1alpha1.Networking,
+) error {
 
-	if net.Spec.Service == nil {
-		if svcErr == nil {
-			return r.Delete(ctx, &svc)
+	svcName := net.Spec.TargetRef.Resource
+
+	var svc corev1.Service
+
+	exists := true
+
+	if err := r.Get(
+		ctx,
+		client.ObjectKey{Namespace: net.Namespace, Name: svcName},
+		&svc,
+	); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
 		}
+
+		exists = false
+	}
+
+	if len(net.Spec.Service.Ports) == 0 {
+
+		if exists {
+			return r.Delete(
+				ctx,
+				&svc,
+			)
+		}
+
 		return nil
 	}
 
@@ -94,47 +133,91 @@ func (r *NetworkingReconciler) reconcileService(ctx context.Context, net *calyps
 		},
 	}
 
-	if err := ctrl.SetControllerReference(net, targetSvc, r.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(
+		net,
+		targetSvc,
+		r.Scheme,
+	); err != nil {
 		return err
 	}
 
-	patchedSvcObj, err := patch.ApplyEscapeHatches(targetSvc, net.Spec.EscapeHatches, "Service")
+	patchedSvcObj, err := patch.ApplyEscapeHatches(
+		targetSvc,
+		net.Spec.EscapeHatches,
+		"Service",
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to apply escape hatch to Service: %w", err)
 	}
+
 	targetSvc = patchedSvcObj.(*corev1.Service)
 
-	if svcErr != nil {
-		if apierrors.IsNotFound(svcErr) {
-			return r.Create(ctx, targetSvc)
-		}
-		return svcErr
+	if !exists {
+		return r.Create(
+			ctx,
+			targetSvc,
+		)
 	}
 
 	targetSvc.ResourceVersion = svc.ResourceVersion
+
 	if svc.Spec.ClusterIP != "" {
 		targetSvc.Spec.ClusterIP = svc.Spec.ClusterIP
 	}
-	return r.Update(ctx, targetSvc)
+
+	return r.Update(
+		ctx,
+		targetSvc,
+	)
 }
 
-func (r *NetworkingReconciler) reconcileIngress(ctx context.Context, net *calypsov1alpha1.Networking) error {
-	ingName := fmt.Sprintf("%s-ingress", net.Name)
-	var ing networkingv1.Ingress
-	ingErr := r.Get(ctx, client.ObjectKey{Namespace: net.Namespace, Name: ingName}, &ing)
+func (r *NetworkingReconciler) reconcileIngress(
+	ctx context.Context,
+	net *calypsov1alpha1.Networking,
+) error {
 
-	if net.Spec.Ingress == nil {
-		if ingErr == nil {
-			return r.Delete(ctx, &ing)
+	ingName := fmt.Sprintf("%s-ingress", net.Name)
+
+	var ing networkingv1.Ingress
+
+	exists := true
+
+	if err := r.Get(
+		ctx,
+		client.ObjectKey{Namespace: net.Namespace, Name: ingName},
+		&ing,
+	); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
 		}
+
+		exists = false
+	}
+
+	hasIngress := len(net.Spec.Ingress.PublicRoutes) > 0 ||
+		len(net.Spec.Ingress.PrivateRoutes) > 0 ||
+		net.Spec.Ingress.TLS.SecretName != ""
+
+	if !hasIngress {
+
+		if exists {
+			return r.Delete(
+				ctx,
+				&ing,
+			)
+		}
+
 		return nil
 	}
 
 	pathType := networkingv1.PathTypePrefix
+
 	var rules []networkingv1.IngressRule
 
 	// Aggregate Public and Private Routes
 	var allRoutes []calypsov1alpha1.GatewayRoute
+
 	allRoutes = append(allRoutes, net.Spec.Ingress.PublicRoutes...)
 	allRoutes = append(allRoutes, net.Spec.Ingress.PrivateRoutes...)
 
@@ -163,12 +246,14 @@ func (r *NetworkingReconciler) reconcileIngress(ctx context.Context, net *calyps
 		for _, route := range allRoutes {
 			var httpPaths []networkingv1.HTTPIngressPath
 			paths := route.Paths
+
 			if len(paths) == 0 {
 				paths = []string{"/"}
 			}
 
 			var portNum int32 = 80
-			if net.Spec.Service != nil && len(net.Spec.Service.Ports) > 0 {
+
+			if len(net.Spec.Service.Ports) > 0 {
 				portNum = net.Spec.Service.Ports[0].Port
 			}
 
@@ -188,6 +273,7 @@ func (r *NetworkingReconciler) reconcileIngress(ctx context.Context, net *calyps
 			}
 
 			hostnames := route.Hostnames
+
 			if len(hostnames) == 0 {
 				hostnames = []string{""}
 			}
@@ -215,13 +301,15 @@ func (r *NetworkingReconciler) reconcileIngress(ctx context.Context, net *calyps
 		},
 	}
 
-	if net.Spec.Ingress.TLS != nil && net.Spec.Ingress.TLS.SecretName != "" {
+	if net.Spec.Ingress.TLS.SecretName != "" {
 		var hosts []string
+
 		for _, rule := range rules {
 			if rule.Host != "" {
 				hosts = append(hosts, rule.Host)
 			}
 		}
+
 		targetIng.Spec.TLS = []networkingv1.IngressTLS{
 			{
 				Hosts:      hosts,
@@ -230,29 +318,46 @@ func (r *NetworkingReconciler) reconcileIngress(ctx context.Context, net *calyps
 		}
 	}
 
-	if err := ctrl.SetControllerReference(net, targetIng, r.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(
+		net,
+		targetIng,
+		r.Scheme,
+	); err != nil {
 		return err
 	}
 
-	patchedIngObj, err := patch.ApplyEscapeHatches(targetIng, net.Spec.EscapeHatches, "Ingress")
+	patchedIngObj, err := patch.ApplyEscapeHatches(
+		targetIng,
+		net.Spec.EscapeHatches,
+		"Ingress",
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to apply escape hatch to Ingress: %w", err)
 	}
+
 	targetIng = patchedIngObj.(*networkingv1.Ingress)
 
-	if ingErr != nil {
-		if apierrors.IsNotFound(ingErr) {
-			return r.Create(ctx, targetIng)
-		}
-		return ingErr
+	if !exists {
+		return r.Create(
+			ctx,
+			targetIng,
+		)
 	}
 
 	targetIng.ResourceVersion = ing.ResourceVersion
-	return r.Update(ctx, targetIng)
+
+	return r.Update(
+		ctx,
+		targetIng,
+	)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *NetworkingReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *NetworkingReconciler) SetupWithManager(
+	mgr ctrl.Manager,
+) error {
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Networking{}).
 		Owns(&corev1.Service{}).

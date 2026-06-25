@@ -63,22 +63,22 @@ type IngressSpec struct {
 
 	// TLS configuration.
 	// +optional
-	TLS *TLSSpec `json:"tls,omitempty"`
+	TLS TLSSpec `json:"tls,omitempty"`
 }
 
 // NetworkingSpec defines the desired state of Networking
 type NetworkingSpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef *ResourceRef `json:"targetRef,omitempty"`
+	TargetRef ResourceRef `json:"targetRef,omitempty"`
 
 	// Service configures the Service for the target workload.
 	// +optional
-	Service *ServiceSpec `json:"service,omitempty"`
+	Service ServiceSpec `json:"service,omitempty"`
 
 	// Ingress configures external access routes.
 	// +optional
-	Ingress *IngressSpec `json:"ingress,omitempty"`
+	Ingress IngressSpec `json:"ingress,omitempty"`
 
 	// EscapeHatches allows applying raw patches to the target resource or managed Services/Ingresses.
 	// +optional

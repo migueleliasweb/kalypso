@@ -28,23 +28,23 @@ type WorkloadSpec struct {
 
 	// Compute defines the compute capability settings.
 	// +optional
-	Compute *ComputeSpec `json:"compute,omitempty"`
+	Compute ComputeSpec `json:"compute,omitempty"`
 
 	// Storage defines the storage capability settings.
 	// +optional
-	Storage *StorageSpec `json:"storage,omitempty"`
+	Storage StorageSpec `json:"storage,omitempty"`
 
 	// Networking defines the networking capability settings.
 	// +optional
-	Networking *NetworkingSpec `json:"networking,omitempty"`
+	Networking NetworkingSpec `json:"networking,omitempty"`
 
 	// Observability defines the observability capability settings.
 	// +optional
-	Observability *ObservabilitySpec `json:"observability,omitempty"`
+	Observability ObservabilitySpec `json:"observability,omitempty"`
 
 	// Security defines the security capability settings.
 	// +optional
-	Security *SecuritySpec `json:"security,omitempty"`
+	Security SecuritySpec `json:"security,omitempty"`
 }
 
 // WorkloadStatus defines the observed state of Workload.

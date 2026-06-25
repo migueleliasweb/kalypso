@@ -44,41 +44,60 @@ var _ = Describe("Observability Controller", func() {
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Observability")
-			err := k8sClient.Get(ctx, typeNamespacedName, observability)
-			if err != nil && errors.IsNotFound(err) {
+
+			if err := k8sClient.Get(
+				ctx,
+				typeNamespacedName,
+				observability,
+			); err != nil && errors.IsNotFound(err) {
 				resource := &calypsov1alpha1.Observability{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
 				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+
+				Expect(k8sClient.Create(
+					ctx,
+					resource,
+				)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &calypsov1alpha1.Observability{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+
+			if err := k8sClient.Get(
+				ctx,
+				typeNamespacedName,
+				resource,
+			); err != nil {
+				Expect(err).NotTo(HaveOccurred())
+			}
 
 			By("Cleanup the specific resource instance Observability")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+
+			Expect(k8sClient.Delete(
+				ctx,
+				resource,
+			)).To(Succeed())
 		})
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
+
 			controllerReconciler := &ObservabilityReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
+			_, err := controllerReconciler.Reconcile(
+				ctx,
+				reconcile.Request{
+					NamespacedName: typeNamespacedName,
+				},
+			)
+
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })

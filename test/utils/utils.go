@@ -40,18 +40,44 @@ func warnError(err error) {
 }
 
 // Run executes the provided command within this context
-func Run(cmd *exec.Cmd) (string, error) {
-	dir, _ := GetProjectDir()
+func Run(
+	cmd *exec.Cmd,
+) (string, error) {
+
+	dir, err := GetProjectDir()
+
+	if err != nil {
+		return "", err
+	}
+
 	cmd.Dir = dir
 
 	if err := os.Chdir(cmd.Dir); err != nil {
-		_, _ = fmt.Fprintf(GinkgoWriter, "chdir dir: %q\n", err)
+		_, _ = fmt.Fprintf(
+			GinkgoWriter,
+			"chdir dir: %q\n",
+			err,
+		)
 	}
 
-	cmd.Env = append(os.Environ(), "GO111MODULE=on")
-	command := strings.Join(cmd.Args, " ")
-	_, _ = fmt.Fprintf(GinkgoWriter, "running: %q\n", command)
+	cmd.Env = append(
+		os.Environ(),
+		"GO111MODULE=on",
+	)
+
+	command := strings.Join(
+		cmd.Args,
+		" ",
+	)
+
+	_, _ = fmt.Fprintf(
+		GinkgoWriter,
+		"running: %q\n",
+		command,
+	)
+
 	output, err := cmd.CombinedOutput()
+
 	if err != nil {
 		return string(output), fmt.Errorf("%q failed with error %q: %w", command, string(output), err)
 	}

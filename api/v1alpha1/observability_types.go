@@ -54,15 +54,15 @@ type PodMonitorSpec struct {
 type ObservabilitySpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef *ResourceRef `json:"targetRef,omitempty"`
+	TargetRef ResourceRef `json:"targetRef,omitempty"`
 
 	// ServiceMonitor enables Prometheus monitoring via ServiceMonitor resources.
 	// +optional
-	ServiceMonitor *ServiceMonitorSpec `json:"serviceMonitor,omitempty"`
+	ServiceMonitor ServiceMonitorSpec `json:"serviceMonitor,omitempty"`
 
 	// PodMonitor enables Prometheus monitoring via PodMonitor resources.
 	// +optional
-	PodMonitor *PodMonitorSpec `json:"podMonitor,omitempty"`
+	PodMonitor PodMonitorSpec `json:"podMonitor,omitempty"`
 
 	// EscapeHatches allows applying raw patches to observability resources.
 	// +optional

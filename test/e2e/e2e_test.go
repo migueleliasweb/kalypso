@@ -292,35 +292,64 @@ func serviceAccountToken() (string, error) {
 	}`
 
 	By("creating temporary file to store the token request")
-	secretName := fmt.Sprintf("%s-token-request", serviceAccountName)
-	tokenRequestFile := filepath.Join("/tmp", secretName)
-	err := os.WriteFile(tokenRequestFile, []byte(tokenRequestRawString), os.FileMode(0o644))
-	if err != nil {
+
+	secretName := fmt.Sprintf(
+		"%s-token-request",
+		serviceAccountName,
+	)
+
+	tokenRequestFile := filepath.Join(
+		"/tmp",
+		secretName,
+	)
+
+	if err := os.WriteFile(
+		tokenRequestFile,
+		[]byte(tokenRequestRawString),
+		os.FileMode(0o644),
+	); err != nil {
 		return "", err
 	}
 
 	var out string
+
 	verifyTokenCreation := func(g Gomega) {
 		By("executing kubectl command to create the token")
-		cmd := exec.Command("kubectl", "create", "--raw", fmt.Sprintf(
-			"/api/v1/namespaces/%s/serviceaccounts/%s/token",
-			namespace,
-			serviceAccountName,
-		), "-f", tokenRequestFile)
+
+		cmd := exec.Command(
+			"kubectl",
+			"create",
+			"--raw",
+			fmt.Sprintf(
+				"/api/v1/namespaces/%s/serviceaccounts/%s/token",
+				namespace,
+				serviceAccountName,
+			),
+			"-f",
+			tokenRequestFile,
+		)
 
 		output, err := cmd.CombinedOutput()
+
 		g.Expect(err).NotTo(HaveOccurred())
 
 		By("parsing the JSON output to extract the token")
+
 		var token tokenRequest
-		err = json.Unmarshal(output, &token)
-		g.Expect(err).NotTo(HaveOccurred())
+
+		if err := json.Unmarshal(
+			output,
+			&token,
+		); err != nil {
+			g.Expect(err).NotTo(HaveOccurred())
+		}
 
 		out = token.Status.Token
 	}
+
 	Eventually(verifyTokenCreation).Should(Succeed())
 
-	return out, err
+	return out, nil
 }
 
 // getMetricsOutput retrieves and returns the logs from the curl pod used to access the metrics endpoint.

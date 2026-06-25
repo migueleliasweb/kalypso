@@ -35,11 +35,11 @@ type RBACSpec struct {
 type SecuritySpec struct {
 	// TargetRef references the target resource this capability applies to.
 	// +optional
-	TargetRef *ResourceRef `json:"targetRef,omitempty"`
+	TargetRef ResourceRef `json:"targetRef,omitempty"`
 
 	// RBAC configures Role and RoleBinding for the workload.
 	// +optional
-	RBAC *RBACSpec `json:"rbac,omitempty"`
+	RBAC RBACSpec `json:"rbac,omitempty"`
 
 	// EscapeHatches allows applying raw patches to security resources.
 	// +optional

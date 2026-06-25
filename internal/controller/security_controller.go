@@ -39,50 +39,102 @@ type SecurityReconciler struct {
 }
 
 
-// Reconcile is part of the main kubernetes reconciliation loop.
-func (r *SecurityReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *SecurityReconciler) Reconcile(
+	ctx context.Context,
+	req ctrl.Request,
+) (ctrl.Result, error) {
+
 	log := logf.FromContext(ctx)
 
 	// Fetch the Security resource
 	var sec calypsov1alpha1.Security
-	if err := r.Get(ctx, req.NamespacedName, &sec); err != nil {
+
+	if err := r.Get(
+		ctx,
+		req.NamespacedName,
+		&sec,
+	); err != nil {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if sec.Spec.TargetRef == nil {
+	if sec.Spec.TargetRef.Resource == "" {
+
 		log.Info("Security targetRef is nil, skipping reconciliation", "name", sec.Name)
+
 		return ctrl.Result{}, nil
 	}
 
 	// Reconcile RBAC
-	if err := r.reconcileRBAC(ctx, &sec); err != nil {
+	if err := r.reconcileRBAC(
+		ctx,
+		&sec,
+	); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *SecurityReconciler) reconcileRBAC(ctx context.Context, sec *calypsov1alpha1.Security) error {
+func (r *SecurityReconciler) reconcileRBAC(
+	ctx context.Context,
+	sec *calypsov1alpha1.Security,
+) error {
+
 	roleName := fmt.Sprintf("%s-role", sec.Name)
 	rbName := fmt.Sprintf("%s-rb", sec.Name)
 
 	var role rbacv1.Role
-	roleErr := r.Get(ctx, client.ObjectKey{Namespace: sec.Namespace, Name: roleName}, &role)
+
+	roleExists := true
+
+	if err := r.Get(
+		ctx,
+		client.ObjectKey{Namespace: sec.Namespace, Name: roleName},
+		&role,
+	); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
+		}
+
+		roleExists = false
+	}
 
 	var rb rbacv1.RoleBinding
-	rbErr := r.Get(ctx, client.ObjectKey{Namespace: sec.Namespace, Name: rbName}, &rb)
 
-	if sec.Spec.RBAC == nil || !sec.Spec.RBAC.CreateRole {
-		if roleErr == nil {
-			if err := r.Delete(ctx, &role); err != nil {
+	rbExists := true
+
+	if err := r.Get(
+		ctx,
+		client.ObjectKey{Namespace: sec.Namespace, Name: rbName},
+		&rb,
+	); err != nil {
+		if !apierrors.IsNotFound(err) {
+			return err
+		}
+
+		rbExists = false
+	}
+
+	if !sec.Spec.RBAC.CreateRole {
+
+		if roleExists {
+			if err := r.Delete(
+				ctx,
+				&role,
+			); err != nil {
 				return err
 			}
 		}
-		if rbErr == nil {
-			if err := r.Delete(ctx, &rb); err != nil {
+
+		if rbExists {
+			if err := r.Delete(
+				ctx,
+				&rb,
+			); err != nil {
 				return err
 			}
 		}
+
 		return nil
 	}
 
@@ -94,27 +146,40 @@ func (r *SecurityReconciler) reconcileRBAC(ctx context.Context, sec *calypsov1al
 		Rules: sec.Spec.RBAC.Rules,
 	}
 
-	if err := ctrl.SetControllerReference(sec, targetRole, r.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(
+		sec,
+		targetRole,
+		r.Scheme,
+	); err != nil {
 		return err
 	}
 
-	patchedRoleObj, err := patch.ApplyEscapeHatches(targetRole, sec.Spec.EscapeHatches, "Role")
+	patchedRoleObj, err := patch.ApplyEscapeHatches(
+		targetRole,
+		sec.Spec.EscapeHatches,
+		"Role",
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to apply escape hatch to Role: %w", err)
 	}
+
 	targetRole = patchedRoleObj.(*rbacv1.Role)
 
-	if roleErr != nil {
-		if apierrors.IsNotFound(roleErr) {
-			if err := r.Create(ctx, targetRole); err != nil {
-				return err
-			}
-		} else {
-			return roleErr
+	if !roleExists {
+		if err := r.Create(
+			ctx,
+			targetRole,
+		); err != nil {
+			return err
 		}
 	} else {
 		targetRole.ResourceVersion = role.ResourceVersion
-		if err := r.Update(ctx, targetRole); err != nil {
+
+		if err := r.Update(
+			ctx,
+			targetRole,
+		); err != nil {
 			return err
 		}
 	}
@@ -138,29 +203,46 @@ func (r *SecurityReconciler) reconcileRBAC(ctx context.Context, sec *calypsov1al
 		},
 	}
 
-	if err := ctrl.SetControllerReference(sec, targetRB, r.Scheme); err != nil {
+	if err := ctrl.SetControllerReference(
+		sec,
+		targetRB,
+		r.Scheme,
+	); err != nil {
 		return err
 	}
 
-	patchedRBObj, err := patch.ApplyEscapeHatches(targetRB, sec.Spec.EscapeHatches, "RoleBinding")
+	patchedRBObj, err := patch.ApplyEscapeHatches(
+		targetRB,
+		sec.Spec.EscapeHatches,
+		"RoleBinding",
+	)
+
 	if err != nil {
 		return fmt.Errorf("failed to apply escape hatch to RoleBinding: %w", err)
 	}
+
 	targetRB = patchedRBObj.(*rbacv1.RoleBinding)
 
-	if rbErr != nil {
-		if apierrors.IsNotFound(rbErr) {
-			return r.Create(ctx, targetRB)
-		}
-		return rbErr
+	if !rbExists {
+		return r.Create(
+			ctx,
+			targetRB,
+		)
 	}
 
 	targetRB.ResourceVersion = rb.ResourceVersion
-	return r.Update(ctx, targetRB)
+
+	return r.Update(
+		ctx,
+		targetRB,
+	)
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *SecurityReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *SecurityReconciler) SetupWithManager(
+	mgr ctrl.Manager,
+) error {
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&calypsov1alpha1.Security{}).
 		Owns(&rbacv1.Role{}).
