@@ -1,5 +1,9 @@
 # POC — KRO `Workload` capability abstraction
 
+## Coding standards
+
+[CODING-STANDARDS.md](CODING-STANDARDS.md)
+
 ## Intent
 
 See how far KRO's `ResourceGraphDefinition` (RGD) can be taken and whether it's suitable
