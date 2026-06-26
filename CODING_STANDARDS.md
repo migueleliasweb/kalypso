@@ -33,6 +33,6 @@ E.g:
 
 ## The `Reconcile()` method and mutating state
 
-When mutating state from within `Reconcile()` function, never create a separate method only to wrap a call to `controllerutils.CreateOrPath*()`. That call must always be part of the `Reconcile()` method of the reconciler. 
+When mutating state from within `Reconcile()` function, never create a separate method only to wrap a call to `controllerutils.CreateOrPath()`. That call must always be part of the `Reconcile()` method of the reconciler. 
 
 If you think the mutate func of the `CreateOrPatch()` is getting too big (over 80 lines), consider exporting part of the mutate logic to a separate method. When separating the mutate fn logic, take a boundary of a specific property that you are about to mutate.

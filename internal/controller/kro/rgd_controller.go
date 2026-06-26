@@ -8,8 +8,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	krov1alpha1 "github.com/kubernetes-sigs/kro/api/v1alpha1"
 )
@@ -101,7 +103,7 @@ func (r *ResourceGraphDefinitionReconciler) SetupWithManager(
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&krov1alpha1.ResourceGraphDefinition{}).
+		For(&krov1alpha1.ResourceGraphDefinition{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {}))).
 		Named("rgd-sync").
 		Complete(r)
 }
