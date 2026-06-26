@@ -1,0 +1,224 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: workload-rgd
+spec:
+  # ---------------------------------------------------------------------------
+  # Schema: the generated `Workload` CRD. Each top-level spec key is a
+  # high-level "capability" that expands into one or more Kubernetes resources.
+  # ---------------------------------------------------------------------------
+  schema:
+    apiVersion: v1alpha1
+    kind: Workload
+    group: kalypso.io
+    scope: Namespaced
+
+    spec:
+      # --- compute: Deployment + (optional) HPA --------------------------------
+      compute:
+        image: string | required=true description="Container image (repo:tag)"
+        replicas: integer | default=1 minimum=1 description="Desired replicas (ignored when autoscaling.enabled)"
+        port: integer | default=8080 description="Container port the app listens on"
+        resources:
+          requests:
+            cpu: string | default="100m"
+            memory: string | default="128Mi"
+          limits:
+            cpu: string | default="500m"
+            memory: string | default="256Mi"
+        autoscaling:
+          enabled: boolean | default=false description="Create an HPA for this workload"
+          minReplicas: integer | default=1 minimum=1
+          maxReplicas: integer | default=10 minimum=1
+          targetCPUUtilization: integer | default=80 minimum=1 maximum=100
+
+      # --- networking: Service + (optional) Istio VS/DR ------------------------
+      networking:
+        expose: boolean | default=true description="Create a Service for this workload"
+        port: integer | default=80 description="Service port (targets compute.port)"
+        mesh:
+          enabled: boolean | default=false description="Create Istio VirtualService + DestinationRule"
+          host: string | default="" description="VirtualService host (defaults to the workload name service)"
+          gateway: string | default="mesh" description="Gateway the VirtualService attaches to"
+
+      # --- observability: (optional) ServiceMonitor ----------------------------
+      observability:
+        enabled: boolean | default=false description="Create a Prometheus ServiceMonitor"
+        path: string | default="/metrics" description="Metrics scrape path"
+        port: string | default="http" description="Named Service port to scrape"
+        interval: string | default="30s" description="Scrape interval"
+
+      # --- security: pod/container securityContext -----------------------------
+      security:
+        runAsNonRoot: boolean | default=true
+        runAsUser: integer | default=1000
+        readOnlyRootFilesystem: boolean | default=true
+        dropCapabilities: "[]string" | default=["ALL"] description="Container capabilities to drop"
+
+    status:
+      # Surface runtime info from the managed resources back onto the instance.
+      availableReplicas: ${deployment.status.availableReplicas}
+      readyReplicas: ${deployment.status.readyReplicas}
+
+    additionalPrinterColumns:
+      - name: Image
+        type: string
+        jsonPath: .spec.compute.image
+      - name: Available
+        type: integer
+        jsonPath: .status.availableReplicas
+      - name: State
+        type: string
+        jsonPath: .status.state
+
+  # ---------------------------------------------------------------------------
+  # Resources: the graph. `includeWhen` makes capability resources optional.
+  # Cross-resource ${...} refs (e.g. service -> deployment labels) define order.
+  # ---------------------------------------------------------------------------
+  resources:
+    # --- Deployment (always) -------------------------------------------------
+    - id: deployment
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+            app.kubernetes.io/managed-by: kro
+        spec:
+          replicas: ${schema.spec.compute.replicas}
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: ${schema.metadata.name}
+          template:
+            metadata:
+              labels:
+                app.kubernetes.io/name: ${schema.metadata.name}
+            spec:
+              securityContext:
+                runAsNonRoot: ${schema.spec.security.runAsNonRoot}
+                runAsUser: ${schema.spec.security.runAsUser}
+              containers:
+                - name: app
+                  image: ${schema.spec.compute.image}
+                  ports:
+                    - name: http
+                      containerPort: ${schema.spec.compute.port}
+                  resources:
+                    requests:
+                      cpu: ${schema.spec.compute.resources.requests.cpu}
+                      memory: ${schema.spec.compute.resources.requests.memory}
+                    limits:
+                      cpu: ${schema.spec.compute.resources.limits.cpu}
+                      memory: ${schema.spec.compute.resources.limits.memory}
+                  securityContext:
+                    readOnlyRootFilesystem: ${schema.spec.security.readOnlyRootFilesystem}
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop: ${schema.spec.security.dropCapabilities}
+
+    # --- HorizontalPodAutoscaler (when compute.autoscaling.enabled) ----------
+    - id: hpa
+      includeWhen:
+        - ${schema.spec.compute.autoscaling.enabled}
+      template:
+        apiVersion: autoscaling/v2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: ${deployment.metadata.name}
+          minReplicas: ${schema.spec.compute.autoscaling.minReplicas}
+          maxReplicas: ${schema.spec.compute.autoscaling.maxReplicas}
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: ${schema.spec.compute.autoscaling.targetCPUUtilization}
+
+    # --- Service (when networking.expose) ------------------------------------
+    - id: service
+      includeWhen:
+        - ${schema.spec.networking.expose}
+      template:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+        spec:
+          selector:
+            app.kubernetes.io/name: ${schema.metadata.name}
+          ports:
+            - name: http
+              port: ${schema.spec.networking.port}
+              targetPort: ${schema.spec.compute.port}
+
+    # --- Istio VirtualService (when networking.mesh.enabled) -----------------
+    - id: virtualService
+      includeWhen:
+        - ${schema.spec.networking.mesh.enabled}
+      template:
+        apiVersion: networking.istio.io/v1
+        kind: VirtualService
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+        spec:
+          hosts:
+            - ${schema.spec.networking.mesh.host}
+          gateways:
+            - ${schema.spec.networking.mesh.gateway}
+          http:
+            - route:
+                - destination:
+                    host: ${service.metadata.name}
+                    port:
+                      number: ${schema.spec.networking.port}
+
+    # --- Istio DestinationRule (when networking.mesh.enabled) ----------------
+    - id: destinationRule
+      includeWhen:
+        - ${schema.spec.networking.mesh.enabled}
+      template:
+        apiVersion: networking.istio.io/v1
+        kind: DestinationRule
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+        spec:
+          host: ${service.metadata.name}
+          trafficPolicy:
+            tls:
+              mode: ISTIO_MUTUAL
+
+    # --- Prometheus ServiceMonitor (when observability.enabled) --------------
+    - id: serviceMonitor
+      includeWhen:
+        - ${schema.spec.observability.enabled}
+      template:
+        apiVersion: monitoring.coreos.com/v1
+        kind: ServiceMonitor
+        metadata:
+          name: ${schema.metadata.name}
+          labels:
+            app.kubernetes.io/name: ${schema.metadata.name}
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: ${schema.metadata.name}
+          endpoints:
+            - port: ${schema.spec.observability.port}
+              path: ${schema.spec.observability.path}
+              interval: ${schema.spec.observability.interval}
