@@ -1,0 +1,13 @@
+apiVersion: kalypso.io/v1alpha1
+kind: Workload
+metadata:
+  name: hello
+spec:
+  # Only the compute capability is set. Everything else relies on schema
+  # defaults, which leave autoscaling/mesh/observability disabled — so the
+  # RGD should create just a Deployment + Service and nothing else.
+  compute:
+    # pause runs cleanly under the strict default securityContext
+    # (runAsNonRoot + readOnlyRootFilesystem + drop ALL caps) so the
+    # Deployment reliably reaches Available without app-specific setup.
+    image: registry.k8s.io/pause:3.9

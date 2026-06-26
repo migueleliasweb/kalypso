@@ -53,7 +53,7 @@ spec:
         runAsNonRoot: boolean | default=true
         runAsUser: integer | default=1000
         readOnlyRootFilesystem: boolean | default=true
-        dropCapabilities: "[]string" | default=["ALL"] description="Container capabilities to drop"
+        dropCapabilities: "[]string | default=[\"ALL\"] description=\"Container capabilities to drop\""
 
     status:
       # Surface runtime info from the managed resources back onto the instance.
