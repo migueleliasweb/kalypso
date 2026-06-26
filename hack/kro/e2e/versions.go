@@ -44,11 +44,17 @@ const (
 	rgdName         = "workload-rgd"         // metadata.name inside the RGD
 	workloadCRDName = "workloads.kalypso.io"
 
-	workloadGroup   = "kalypso.io"
-	workloadVersion = "v1alpha1"
-	workloadKind    = "Workload"
+	// ClusterWorkload (cluster-scoped, namespace-owning) chains the Workload RGD.
+	clusterRGDPath         = "../clusterworkload-rgd.yaml"
+	clusterRGDName         = "clusterworkload-rgd"
+	clusterWorkloadCRDName = "clusterworkloads.kalypso.io"
 
-	// testNamespace is where Workload instances (and their children) are created.
+	workloadGroup       = "kalypso.io"
+	workloadVersion     = "v1alpha1"
+	workloadKind        = "Workload"
+	clusterWorkloadKind = "ClusterWorkload"
+
+	// testNamespace is where namespaced Workload instances (and their children) go.
 	testNamespace = "workloads"
 )
 

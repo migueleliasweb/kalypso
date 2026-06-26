@@ -135,9 +135,58 @@ spec:
     dropCapabilities: ["ALL"]
 ```
 
+## ClusterWorkload — the namespace-owning variant
+
+`Workload` is namespaced: it's the **default** and the right choice at scale (the namespace
+boundary handles name collisions and enables namespace-scoped RBAC). For workloads that
+want **complete namespace isolation**, `ClusterWorkload` (in `clusterworkload-rgd.yaml`) is
+a cluster-scoped CRD that **creates and owns its own namespace**.
+
+It does not re-implement the capabilities. Via **KRO RGD chaining** it manages just two
+resources — a `Namespace` and a `Workload` instance inside it — reusing all of the Workload
+expansion logic. Because KRO deletes in reverse-topological order (no owner references),
+deleting a `ClusterWorkload` removes the `Workload` first and the `Namespace` last.
+
+Spec:
+
+| Field       | Type     | Default        | Notes                                                |
+|-------------|----------|----------------|------------------------------------------------------|
+| `namespace` | string   | instance name  | The namespace to create and own.                     |
+| `workload`  | `object` | —              | Forwarded verbatim to the inner `Workload` spec.     |
+
+`workload` is a free-form object (no duplication of the capability schema); the `Workload`
+CRD validates it and applies its defaults. Example:
+
+```yaml
+apiVersion: kalypso.io/v1alpha1
+kind: ClusterWorkload
+metadata:
+  name: tenant-a            # namespace defaults to "tenant-a"
+spec:
+  workload:
+    compute:
+      image: ghcr.io/acme/tenant-a:1.0.0
+    networking:
+      mesh:
+        enabled: true
+        host: tenant-a.acme.internal
+```
+
+**Trade-offs (intentional):**
+- *Privileged*: creating namespaces is cluster-admin-level — `ClusterWorkload` can't be
+  gated by namespace RBAC, so restrict who may create them.
+- *Blast radius*: deleting a `ClusterWorkload` deletes its whole namespace (and anything
+  else placed in it). KRO's ordered deletion makes it predictable, but the radius is large.
+- *Global names*: `ClusterWorkload` names are cluster-unique; defaulting the namespace to
+  the instance name keeps child isolation collision-free.
+- *Apply order*: `clusterworkload-rgd` depends on the `Workload` CRD existing — apply
+  `workload-rgd.yaml` first.
+
 ## Dependencies
 
-- **KRO** controller installed in the target cluster.
+- **KRO** controller installed in the target cluster, with RBAC covering the generated
+  kinds and the resources they manage (the default kro ClusterRole does not — bind a
+  suitable role; the e2e harness uses `cluster-admin`).
 - **Istio** CRDs (`networking.istio.io`) — only needed when `mesh.enabled`.
 - **Prometheus Operator** CRDs (`monitoring.coreos.com`) — only needed when
   `observability.enabled`.

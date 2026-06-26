@@ -90,8 +90,14 @@ The `schema.spec` (and `types`) are written in KRO's **SimpleSchema**: a compact
 | Maps       | `"map[string]string"`, `"map[string]MyType"` |
 | Nested     | inline nested object, or reference a custom `types:` entry |
 | Custom     | any key under `schema.types` (recursive definitions allowed) |
+| Free-form  | `object` — arbitrary unstructured content (see below) |
 
 Collection/map types must be **quoted** in YAML because of the `[]` / `map[...]` brackets.
+
+The `object` type accepts any nested content and **disables kro's field validation** for
+that field, forwarding the value as-is. Useful for passing a whole sub-spec through to
+another resource (e.g. `spec: ${schema.spec.workload}` in RGD chaining); the receiving
+resource/CRD still validates it.
 
 ### Markers (after the `|`)
 
@@ -159,6 +165,55 @@ resources:
 - **Avoid volatile status fields** in conditions (e.g. replica counts) — they cause
   flip-flop create/delete churn. Prefer stable, user-controlled toggles.
 
+## Readiness gating — `readyWhen`
+
+A resource can declare `readyWhen` — a list of CEL booleans that must all be true before
+KRO treats it as ready and proceeds to dependents. Unlike `includeWhen` (which decides
+*whether* to create), `readyWhen` decides *when it's done*. Common with chained instances:
+
+```yaml
+- id: database
+  template: { apiVersion: kro.run/v1alpha1, kind: Database, ... }
+  readyWhen:
+    - ${database.status.ready == true}
+```
+
+## Scope — Namespaced vs Cluster
+
+`schema.scope` is `Namespaced` (default) or `Cluster` (immutable after creation).
+
+- **Namespaced** instances live in a namespace; their managed namespaced resources default
+  to that namespace. Best default: the namespace boundary handles name collisions and
+  enables namespace-scoped RBAC.
+- **Cluster** instances are cluster-wide. **Every namespaced child must set
+  `metadata.namespace` explicitly** (hardcoded or via CEL) — kro validates this at RGD
+  creation. A cluster-scoped instance can create a `Namespace` and place resources into it
+  (reference `${namespace.metadata.name}` to both satisfy the rule and order the namespace
+  first).
+
+## RGD chaining (composition)
+
+Every RGD generates a CRD, and that CRD can be used as a **resource template inside another
+RGD** — so you compose abstractions instead of duplicating resource logic.
+
+```yaml
+resources:
+  - id: workload
+    template:
+      apiVersion: kalypso.io/v1alpha1   # the generated CRD's group/version
+      kind: Workload
+      metadata:
+        name: ${schema.metadata.name}
+        namespace: ${namespace.metadata.name}
+      spec: ${schema.spec.workload}     # forward a whole object sub-spec through
+    readyWhen:
+      - ${workload.status.state == "ACTIVE"}
+```
+
+Inner instances are created in CEL-dependency order; reference their `.status` like any
+other resource. The outer RGD depends on the inner CRD existing — **apply the inner RGD
+first.** Keep nesting shallow (debuggability).
+
 ## Status & reserved fields
 
 - `schema.status` fields are CEL expressions surfaced onto the instance's `.status`.
@@ -174,7 +229,11 @@ resources:
 3. User applies an instance of that kind; KRO renders + applies the resource graph.
 4. Managed-resource status flows back into the instance's `.status` per the
    `schema.status` CEL.
-5. Deleting the instance garbage-collects the managed resources (owner refs).
+5. Deleting the instance deletes the managed resources. **KRO does not set owner
+   references** — it deletes them itself in **reverse topological order** (dependents
+   first, their dependencies last). This is more predictable than Kubernetes GC and avoids
+   the cluster-scoped-owner / namespaced-dependent caveat — so a cluster-scoped instance
+   can safely own a `Namespace` (deleted last, after its contents).
 
 ## Gotchas worth remembering
 
@@ -184,11 +243,16 @@ resources:
   predictable for omitted blocks.
 - Cross-resource refs define ordering — there's no manual `dependsOn`; the graph is
   inferred from `${...}`.
+- Deletion is KRO-ordered (reverse topological), **not** owner-reference GC.
+- For chaining, the **controller SA needs RBAC** for the generated kinds and the resources
+  they manage; the default kro ClusterRole does not include them.
 
 ## Sources
 
 - [ResourceGraphDefinitions](https://kro.run/docs/concepts/resource-group-definitions/)
-- [Schema Definition](https://kro.run/docs/concepts/rgd/schema/)
-- [Simple Schema spec](https://kro.run/api/specifications/simple-schema/)
+- [Schema Definition (incl. scope)](https://kro.run/docs/concepts/rgd/schema/)
+- [Simple Schema spec (incl. `object`)](https://kro.run/api/specifications/simple-schema/)
 - [Conditional creation (`includeWhen`)](https://kro.run/docs/concepts/rgd/resource-definitions/conditional-creation/)
+- [RGD chaining](https://kro.run/docs/building-abstractions/rgd-chaining/)
+- [Instances (deletion ordering)](https://kro.run/docs/concepts/instances/)
 - [Quick Start](https://kro.run/docs/getting-started/deploy-a-resource-graph-definition/)

@@ -1,0 +1,69 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: clusterworkload-rgd
+spec:
+  # ---------------------------------------------------------------------------
+  # ClusterWorkload is the cluster-scoped, namespace-owning variant of Workload.
+  # It does NOT re-implement the capability expansion: via KRO RGD chaining it
+  # just creates a Namespace and a Workload instance inside it, reusing all of
+  # the Workload RGD's logic. KRO deletes in reverse topological order, so
+  # deleting a ClusterWorkload tears down the Workload first and the Namespace
+  # last (no owner references / cross-scope GC involved).
+  # ---------------------------------------------------------------------------
+  schema:
+    apiVersion: v1alpha1
+    kind: ClusterWorkload
+    group: kalypso.io
+    scope: Cluster
+
+    spec:
+      # Namespace to create and own. Defaults to the ClusterWorkload's name.
+      namespace: string | default="" description="Namespace to create and own (defaults to the instance name)"
+      # The Workload spec, forwarded verbatim to the inner Workload instance.
+      # Declared as a free-form object so we don't duplicate Workload's schema;
+      # the Workload CRD still validates it and applies its defaults.
+      workload: object
+
+    status:
+      namespace: ${ns.metadata.name}
+      workloadState: ${workload.status.state}
+      availableReplicas: ${workload.status.availableReplicas}
+
+    additionalPrinterColumns:
+      - name: Namespace
+        type: string
+        jsonPath: .status.namespace
+      - name: Workload
+        type: string
+        jsonPath: .status.workloadState
+      - name: State
+        type: string
+        jsonPath: .status.state
+
+  resources:
+    # --- the owned namespace ("namespace" is a reserved id in KRO, so use "ns") -
+    - id: ns
+      template:
+        apiVersion: v1
+        kind: Namespace
+        metadata:
+          # Quoted: the CEL ternary contains ": " which YAML would read as a mapping.
+          name: '${schema.spec.namespace != "" ? schema.spec.namespace : schema.metadata.name}'
+          labels:
+            app.kubernetes.io/managed-by: kro
+            kalypso.io/clusterworkload: ${schema.metadata.name}
+
+    # --- the chained Workload instance (reuses workload-rgd) -----------------
+    - id: workload
+      template:
+        apiVersion: kalypso.io/v1alpha1
+        kind: Workload
+        metadata:
+          name: ${schema.metadata.name}
+          # Explicit namespace is required for scope: Cluster, and referencing
+          # the namespace resource makes KRO create it first.
+          namespace: ${ns.metadata.name}
+        spec: ${schema.spec.workload}
+      readyWhen:
+        - ${workload.status.state == "ACTIVE"}

@@ -21,13 +21,16 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 )
 
-// Child-resource GVKs the Workload RGD manages.
+// Resource GVKs the RGDs manage.
 var (
+	namespaceGVK       = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
 	serviceGVK         = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
 	hpaGVK             = schema.GroupVersionKind{Group: "autoscaling", Version: "v2", Kind: "HorizontalPodAutoscaler"}
 	virtualServiceGVK  = schema.GroupVersionKind{Group: "networking.istio.io", Version: "v1", Kind: "VirtualService"}
 	destinationRuleGVK = schema.GroupVersionKind{Group: "networking.istio.io", Version: "v1", Kind: "DestinationRule"}
 	serviceMonitorGVK  = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "ServiceMonitor"}
+	workloadGVK        = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: workloadKind}
+	clusterWorkloadGVK = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: clusterWorkloadKind}
 )
 
 // TestWorkloadMinimal applies a compute-only Workload and asserts the RGD
@@ -36,14 +39,14 @@ var (
 func TestWorkloadMinimal(t *testing.T) {
 	const name = "hello"
 	feat := features.New("workload/minimal").
-		Setup(applyWorkload("testdata/workload-minimal.yaml")).
-		Assess("deployment available", assertDeploymentAvailable(name)).
-		Assess("service present", assertExists(serviceGVK, name)).
-		Assess("hpa absent", assertAbsent(hpaGVK, name)).
-		Assess("virtualservice absent", assertAbsent(virtualServiceGVK, name)).
-		Assess("destinationrule absent", assertAbsent(destinationRuleGVK, name)).
-		Assess("servicemonitor absent", assertAbsent(serviceMonitorGVK, name)).
-		Teardown(deleteWorkload(name)).
+		Setup(applyNamespaced("testdata/workload-minimal.yaml")).
+		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
+		Assess("service present", assertExists(serviceGVK, testNamespace, name)).
+		Assess("hpa absent", assertAbsent(hpaGVK, testNamespace, name)).
+		Assess("virtualservice absent", assertAbsent(virtualServiceGVK, testNamespace, name)).
+		Assess("destinationrule absent", assertAbsent(destinationRuleGVK, testNamespace, name)).
+		Assess("servicemonitor absent", assertAbsent(serviceMonitorGVK, testNamespace, name)).
+		Teardown(deleteInstance(workloadGVK, testNamespace, name)).
 		Feature()
 	testenv.Test(t, feat)
 }
@@ -53,42 +56,76 @@ func TestWorkloadMinimal(t *testing.T) {
 func TestWorkloadFull(t *testing.T) {
 	const name = "payments"
 	feat := features.New("workload/full").
-		Setup(applyWorkload("testdata/workload-full.yaml")).
-		Assess("deployment available", assertDeploymentAvailable(name)).
-		Assess("service present", assertExists(serviceGVK, name)).
-		Assess("hpa present", assertExists(hpaGVK, name)).
-		Assess("virtualservice present", assertExists(virtualServiceGVK, name)).
-		Assess("destinationrule present", assertExists(destinationRuleGVK, name)).
-		Assess("servicemonitor present", assertExists(serviceMonitorGVK, name)).
-		Teardown(deleteWorkload(name)).
+		Setup(applyNamespaced("testdata/workload-full.yaml")).
+		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
+		Assess("service present", assertExists(serviceGVK, testNamespace, name)).
+		Assess("hpa present", assertExists(hpaGVK, testNamespace, name)).
+		Assess("virtualservice present", assertExists(virtualServiceGVK, testNamespace, name)).
+		Assess("destinationrule present", assertExists(destinationRuleGVK, testNamespace, name)).
+		Assess("servicemonitor present", assertExists(serviceMonitorGVK, testNamespace, name)).
+		Teardown(deleteInstance(workloadGVK, testNamespace, name)).
+		Feature()
+	testenv.Test(t, feat)
+}
+
+// TestClusterWorkload applies a cluster-scoped ClusterWorkload and asserts it
+// creates and owns a namespace, then (via RGD chaining) a Workload inside it
+// whose Deployment + Service come up — validating the namespace-owning variant.
+func TestClusterWorkload(t *testing.T) {
+	const name = "tenant-a" // namespace defaults to the instance name
+	feat := features.New("clusterworkload").
+		Setup(applyClusterScoped("testdata/clusterworkload.yaml")).
+		Assess("namespace created", assertExists(namespaceGVK, "", name)).
+		Assess("workload created in owned ns", assertExists(workloadGVK, name, name)).
+		Assess("deployment available in owned ns", assertDeploymentAvailable(name, name)).
+		Assess("service present in owned ns", assertExists(serviceGVK, name, name)).
+		Teardown(deleteInstance(clusterWorkloadGVK, "", name)).
 		Feature()
 	testenv.Test(t, feat)
 }
 
 // --- feature helpers ---------------------------------------------------------
 
-func applyWorkload(path string) features.Func {
+// applyNamespaced creates a namespaced instance in the suite's test namespace.
+func applyNamespaced(path string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		data, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatalf("reading %s: %v", path, err)
-		}
-		obj := &unstructured.Unstructured{Object: map[string]interface{}{}}
-		if err := yaml.Unmarshal(data, &obj.Object); err != nil {
-			t.Fatalf("unmarshalling %s: %v", path, err)
-		}
+		obj := decodeManifest(t, path)
 		obj.SetNamespace(cfg.Namespace())
 		if err := cfg.Client().Resources().Create(ctx, obj); err != nil {
-			t.Fatalf("creating Workload from %s: %v", path, err)
+			t.Fatalf("creating %s from %s: %v", obj.GetKind(), path, err)
 		}
 		return ctx
 	}
 }
 
-func assertDeploymentAvailable(name string) features.Func {
+// applyClusterScoped creates a cluster-scoped instance (no namespace).
+func applyClusterScoped(path string) features.Func {
+	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+		obj := decodeManifest(t, path)
+		if err := cfg.Client().Resources().Create(ctx, obj); err != nil {
+			t.Fatalf("creating %s from %s: %v", obj.GetKind(), path, err)
+		}
+		return ctx
+	}
+}
+
+func decodeManifest(t *testing.T, path string) *unstructured.Unstructured {
+	t.Helper()
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading %s: %v", path, err)
+	}
+	obj := &unstructured.Unstructured{Object: map[string]interface{}{}}
+	if err := yaml.Unmarshal(data, &obj.Object); err != nil {
+		t.Fatalf("unmarshalling %s: %v", path, err)
+	}
+	return obj
+}
+
+func assertDeploymentAvailable(namespace, name string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		r := cfg.Client().Resources()
-		dep := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: cfg.Namespace()}}
+		dep := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: name, Namespace: namespace}}
 		// ResourceMatch re-polls on NotFound (KRO creates the Deployment
 		// asynchronously), unlike DeploymentConditionMatch which aborts on it.
 		if err := wait.For(
@@ -103,27 +140,27 @@ func assertDeploymentAvailable(name string) features.Func {
 			wait.WithTimeout(3*time.Minute),
 			wait.WithInterval(3*time.Second),
 		); err != nil {
-			t.Fatalf("deployment %q never became available: %v", name, err)
+			t.Fatalf("deployment %s/%s never became available: %v", namespace, name, err)
 		}
 		return ctx
 	}
 }
 
 // assertExists waits (briefly) for the object to appear, since KRO creates
-// children asynchronously after the Workload is applied.
-func assertExists(gvk schema.GroupVersionKind, name string) features.Func {
+// resources asynchronously. Pass namespace "" for cluster-scoped kinds.
+func assertExists(gvk schema.GroupVersionKind, namespace, name string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		r := cfg.Client().Resources()
 		obj := &unstructured.Unstructured{}
 		obj.SetGroupVersionKind(gvk)
 		obj.SetName(name)
-		obj.SetNamespace(cfg.Namespace())
+		obj.SetNamespace(namespace)
 		if err := wait.For(
 			conditions.New(r).ResourceMatch(obj, func(k8s.Object) bool { return true }),
-			wait.WithTimeout(1*time.Minute),
+			wait.WithTimeout(2*time.Minute),
 			wait.WithInterval(2*time.Second),
 		); err != nil {
-			t.Fatalf("expected %s %q to exist: %v", gvk.Kind, name, err)
+			t.Fatalf("expected %s %s/%s to exist: %v", gvk.Kind, namespace, name, err)
 		}
 		return ctx
 	}
@@ -131,35 +168,35 @@ func assertExists(gvk schema.GroupVersionKind, name string) features.Func {
 
 // assertAbsent verifies the object does not exist. It runs after the Deployment
 // is Available, so KRO's reconcile (which decides includeWhen) has completed.
-func assertAbsent(gvk schema.GroupVersionKind, name string) features.Func {
+func assertAbsent(gvk schema.GroupVersionKind, namespace, name string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
 		obj := &unstructured.Unstructured{}
 		obj.SetGroupVersionKind(gvk)
-		err := cfg.Client().Resources().Get(ctx, name, cfg.Namespace(), obj)
+		err := cfg.Client().Resources().Get(ctx, name, namespace, obj)
 		if err == nil {
-			t.Fatalf("expected %s %q to be absent, but it exists", gvk.Kind, name)
+			t.Fatalf("expected %s %s/%s to be absent, but it exists", gvk.Kind, namespace, name)
 		}
 		if !apierrors.IsNotFound(err) {
-			t.Fatalf("unexpected error checking %s %q: %v", gvk.Kind, name, err)
+			t.Fatalf("unexpected error checking %s %s/%s: %v", gvk.Kind, namespace, name, err)
 		}
 		return ctx
 	}
 }
 
-func deleteWorkload(name string) features.Func {
+// deleteInstance removes an instance on teardown — but only when tearing down.
+// By default instances (and their KRO-managed children) linger for inspection.
+func deleteInstance(gvk schema.GroupVersionKind, namespace, name string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
-		// Leave the Workload (and its KRO-managed children) in place by default
-		// so failures can be inspected; only clean up when tearing down.
 		if !shouldDestroy() {
-			t.Logf("leaving Workload %q in place for troubleshooting (set %s=true to clean up)", name, destroyEnvVar)
+			t.Logf("leaving %s %q in place for troubleshooting (set %s=true to clean up)", gvk.Kind, name, destroyEnvVar)
 			return ctx
 		}
 		obj := &unstructured.Unstructured{}
-		obj.SetGroupVersionKind(schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: workloadKind})
+		obj.SetGroupVersionKind(gvk)
 		obj.SetName(name)
-		obj.SetNamespace(cfg.Namespace())
+		obj.SetNamespace(namespace)
 		if err := cfg.Client().Resources().Delete(ctx, obj); err != nil {
-			t.Logf("deleting Workload %q: %v", name, err)
+			t.Logf("deleting %s %q: %v", gvk.Kind, name, err)
 		}
 		return ctx
 	}

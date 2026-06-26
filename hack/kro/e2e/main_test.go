@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 		envfuncs.CreateNamespace(testNamespace),
 		installCRDs,
 		installKRO,
-		applyRGD,
+		applyRGDs,
 	)
 
 	// Leave the cluster behind by default for troubleshooting; destroy only
@@ -111,42 +111,54 @@ func installKRO(ctx context.Context, cfg *envconf.Config) (context.Context, erro
 	return ctx, nil
 }
 
-// applyRGD applies the Workload RGD and waits for the generated CRD to be
-// Established so Workload instances can be created.
-func applyRGD(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
+// applyRGDs applies the Workload RGD first (the ClusterWorkload RGD's graph
+// references the generated Workload CRD), then the ClusterWorkload RGD.
+func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
 	r := cfg.Client().Resources()
-	data, err := os.ReadFile(rgdPath)
+	if err := applyAndWaitRGD(ctx, r, rgdPath, rgdName, workloadCRDName); err != nil {
+		return ctx, err
+	}
+	if err := applyAndWaitRGD(ctx, r, clusterRGDPath, clusterRGDName, clusterWorkloadCRDName); err != nil {
+		return ctx, err
+	}
+	return ctx, nil
+}
+
+// applyAndWaitRGD applies an RGD manifest then waits for its generated CRD to be
+// Established and the RGD itself to reach state Active (dynamic controller up).
+func applyAndWaitRGD(ctx context.Context, r *resources.Resources, path, name, crdName string) error {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return ctx, fmt.Errorf("reading RGD %s: %w", rgdPath, err)
+		return fmt.Errorf("reading RGD %s: %w", path, err)
 	}
 	if err := applyYAML(ctx, r, data); err != nil {
-		return ctx, fmt.Errorf("applying RGD: %w", err)
+		return fmt.Errorf("applying RGD %s: %w", path, err)
 	}
 
 	crd := &unstructured.Unstructured{}
 	crd.SetGroupVersionKind(schema.GroupVersionKind{Group: "apiextensions.k8s.io", Version: "v1", Kind: "CustomResourceDefinition"})
-	crd.SetName(workloadCRDName)
+	crd.SetName(crdName)
 	if err := wait.For(
 		conditions.New(r).ResourceMatch(crd, crdEstablished),
 		wait.WithTimeout(2*time.Minute),
 		wait.WithInterval(3*time.Second),
 	); err != nil {
-		return ctx, fmt.Errorf("waiting for %s to be Established: %w", workloadCRDName, err)
+		return fmt.Errorf("waiting for %s to be Established: %w", crdName, err)
 	}
 
 	// The CRD being Established isn't enough: KRO must also bring up the per-RGD
 	// dynamic controller (status.state == Active) before instances reconcile.
 	rgd := &unstructured.Unstructured{}
 	rgd.SetGroupVersionKind(schema.GroupVersionKind{Group: "kro.run", Version: "v1alpha1", Kind: "ResourceGraphDefinition"})
-	rgd.SetName(rgdName)
+	rgd.SetName(name)
 	if err := wait.For(
 		conditions.New(r).ResourceMatch(rgd, rgdActive),
 		wait.WithTimeout(2*time.Minute),
 		wait.WithInterval(3*time.Second),
 	); err != nil {
-		return ctx, fmt.Errorf("waiting for RGD %s to become Active: %w", rgdName, err)
+		return fmt.Errorf("waiting for RGD %s to become Active: %w", name, err)
 	}
-	return ctx, nil
+	return nil
 }
 
 func rgdActive(obj k8s.Object) bool {
