@@ -103,7 +103,9 @@ func (r *ResourceGraphDefinitionReconciler) SetupWithManager(
 	}
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&krov1alpha1.ResourceGraphDefinition{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {}))).
+		For(&krov1alpha1.ResourceGraphDefinition{}, builder.WithPredicates(predicate.NewPredicateFuncs(func(object client.Object) bool {
+
+		}))).
 		Named("rgd-sync").
 		Complete(r)
 }

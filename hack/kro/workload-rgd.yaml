@@ -35,7 +35,7 @@ spec:
       # --- networking: Service + (optional) Istio VS/DR ------------------------
       networking:
         expose: boolean | default=true description="Create a Service for this workload"
-        port: integer | default=80 description="Service port (targets compute.port)"
+        port: integer | default=8080 description="Service port (targets compute.port)"
         mesh:
           enabled: boolean | default=false description="Create Istio VirtualService + DestinationRule"
           host: string | default="" description="VirtualService host (defaults to the workload name service)"
