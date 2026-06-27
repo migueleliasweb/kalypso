@@ -86,7 +86,7 @@ A test harness to allow quick iteration on the CRDs and RGDs provided by `Kalyps
 
 ### Release V1Alpha2
 
-The V1Alpha2 release will provide support for all core Kubernetes components as Kalypso building blocks.
+The V1Alpha2 release will provide support for other (core) compute-related Kubernetes components as Kalypso building blocks. E.g. RBAC, Network Policy. 
 
 ### Release V1Alpha3
 
