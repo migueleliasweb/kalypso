@@ -1,9 +1,0 @@
-## Append samples of your project ##
-resources:
-- calypso_v1alpha1_workload.yaml
-- calypso_v1alpha1_compute.yaml
-- calypso_v1alpha1_storage.yaml
-- calypso_v1alpha1_networking.yaml
-- calypso_v1alpha1_observability.yaml
-- calypso_v1alpha1_security.yaml
-# +kubebuilder:scaffold:manifestskustomizesamples
