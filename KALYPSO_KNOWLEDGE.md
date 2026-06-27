@@ -67,3 +67,35 @@ To safely reference resource statuses when some resources might be excluded:
 readyReplicas: ${schema.spec.workloadType == "Deployment" ? deployment.status.readyReplicas : (schema.spec.workloadType == "StatefulSet" ? statefulSet.status.readyReplicas : daemonSet.status.numberReady)}
 ```
 *Note: The short-circuiting in CEL prevents evaluating properties of uncreated resources.*
+
+---
+
+## 5. Key KRO Gotchas & Best Practices
+
+### A. CEL Ternary Operator Type Matching
+In CEL, the ternary operator `cond ? branch1 : branch2` requires both branches to evaluate to the **exact same static type** at compilation time. Mixing custom objects, maps, or lists with primitive types or `null` will throw type-checking errors.
+* **Solution**: Wrap both branches in the `dyn()` function to cast them to type `any`.
+  ```yaml
+  nodeSelector: '${has(schema.spec.scheduling.nodeSelector) ? dyn(schema.spec.scheduling.nodeSelector) : dyn(null)}'
+  ```
+
+### B. Guarding Optional Fields
+Accessing optional fields that are omitted in a Custom Resource instance throws a `no such key` error during graph reconciliation.
+* **Solution**: Always guard optional fields using the `has()` function:
+  ```yaml
+  livenessProbe: '${schema.spec.probes.liveness.enabled ? (has(schema.spec.probes.liveness.custom) ? schema.spec.probes.liveness.custom : dyn({...})) : null}'
+  ```
+
+### C. Handling Kubernetes `IntOrString` Types
+Fields like `maxUnavailable` in a `PodDisruptionBudget` accept either raw integers (`1`) or percentage strings (`"50%"`).
+* Declaring the schema field as an `object` creates an OpenAPI validation mismatch (since Kubernetes expects a JSON object map for `object` schemas, not a scalar integer or string).
+* Declaring it as a `string` causes Kubernetes validation to reject numeric string representations (like `"1"`) because it expects strings to end with a `%` symbol.
+* **Solution**: Keep the schema type as `string` (e.g. `default="1"`), and handle the type casting dynamically at runtime in the CEL template using `endsWith()` and `int()` wrapped in `dyn()`:
+  ```yaml
+  maxUnavailable: '${schema.spec.pdb.maxUnavailable.endsWith("%") ? dyn(schema.spec.pdb.maxUnavailable) : dyn(int(schema.spec.pdb.maxUnavailable))}'
+  ```
+
+### D. RGD Dependency Validation
+When testing chained RGDs (e.g., `Compute` referencing `PodSpec` custom types), the KRO CLI `kro validate` command cannot resolve the referenced schema unless it is already applied to the Kubernetes cluster.
+* **Solution**: In E2E tests, apply the dependee RGD (`PodSpec`) first, wait for its CRD to become established, and then validate and apply the dependent RGD (`Compute`).
+
