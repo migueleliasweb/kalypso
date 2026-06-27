@@ -26,4 +26,6 @@ KRO resources must be placed under `capabilities/compute/v1alpha1`.
 
 ## RGD
 
-- A RGD that creates a Deployment, Horizontal Pod Autoscaler, PodDisruptionBudget, Pod Affinity/Anti-Affinity/Node Affinity/Topology Spread Constraints, ConfigMap, Secret, Service Account
+- A RGD that creates a Deployment, Horizontal Pod Autoscaler, PodDisruptionBudget, Pod Affinity/Anti-Affinity/Node Affinity/Topology Spread Constraints, ConfigMap, Secret, Service Account.
+
+The name of the RGD must be the name of the capability: `Compute`.

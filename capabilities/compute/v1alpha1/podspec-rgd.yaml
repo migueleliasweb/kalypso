@@ -1,0 +1,144 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: podspec
+spec:
+  schema:
+    apiVersion: v1alpha1
+    kind: PodSpec
+    group: kalypso.lmoet.io
+    scope: Namespaced
+
+    spec:
+      image: string | required=true description="Container image to run"
+      port: integer | default=8080 description="Container port the application listens on"
+
+      # --- Container Command & Args & Env
+      command: "[]string | default=[]"
+      args: "[]string | default=[]"
+      env: "[]object | default=[]"
+
+      # --- Guaranteed Resources (Requests == Limits)
+      resources:
+        cpu: string | default="200m" description="Guaranteed CPU request and limit"
+        memory: string | default="128Mi" description="Guaranteed Memory request and limit"
+
+      # --- Probes configuration
+      probes:
+        liveness:
+          enabled: boolean | default=true
+          path: string | default="/healthz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+        readiness:
+          enabled: boolean | default=true
+          path: string | default="/readyz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+        startup:
+          enabled: boolean | default=false
+          path: string | default="/healthz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+
+      # --- Restart Policy
+      restartPolicy: string | default="Always" enum="Always" description="Restart policy for the container"
+
+      # --- Service Account
+      serviceAccount:
+        create: boolean | default=true description="Whether to create a dedicated Service Account"
+        name: string | default="" description="Optional override name for the Service Account"
+
+      # --- Scheduling & Affinity
+      scheduling:
+        nodeSelector: "map[string]string"
+        affinity: object
+        tolerations: "[]object | default=[]"
+        topologySpread:
+          enabled: boolean | default=true
+          maxSkew: integer | default=1
+          topologyKey: string | default="kubernetes.io/hostname"
+          whenUnsatisfiable: string | default="ScheduleAnyway"
+          customConstraints: "[]object | default=[]"
+
+      # --- ConfigMap & Secret Integration
+      configMap:
+        enabled: boolean | default=false
+        data: "map[string]string"
+      secret:
+        enabled: boolean | default=false
+        data: "map[string]string"
+
+    status:
+      podSpec:
+        serviceAccountName: ${schema.spec.serviceAccount.create ? (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : schema.metadata.name) : (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : "default")}
+        restartPolicy: ${schema.spec.restartPolicy}
+        containers:
+          - name: app
+            image: ${schema.spec.image}
+            command: ${schema.spec.command}
+            args: ${schema.spec.args}
+            env: ${schema.spec.env}
+            ports:
+              - name: http
+                containerPort: ${schema.spec.port}
+            resources:
+              requests:
+                cpu: ${schema.spec.resources.cpu}
+                memory: ${schema.spec.resources.memory}
+              limits:
+                cpu: ${schema.spec.resources.cpu}
+                memory: ${schema.spec.resources.memory}
+            envFrom: ${ (schema.spec.configMap.enabled ? [{"configMapRef": {"name": schema.metadata.name}}] : []) + (schema.spec.secret.enabled ? [{"secretRef": {"name": schema.metadata.name}}] : []) }
+            livenessProbe: ${schema.spec.probes.liveness.enabled ? (schema.spec.probes.liveness.custom != null ? schema.spec.probes.liveness.custom : {"httpGet": {"path": schema.spec.probes.liveness.path, "port": schema.spec.probes.liveness.port}, "initialDelaySeconds": schema.spec.probes.liveness.initialDelaySeconds, "periodSeconds": schema.spec.probes.liveness.periodSeconds, "timeoutSeconds": schema.spec.probes.liveness.timeoutSeconds, "successThreshold": schema.spec.probes.liveness.successThreshold, "failureThreshold": schema.spec.probes.liveness.failureThreshold}) : null}
+            readinessProbe: ${schema.spec.probes.readiness.enabled ? (schema.spec.probes.readiness.custom != null ? schema.spec.probes.readiness.custom : {"httpGet": {"path": schema.spec.probes.readiness.path, "port": schema.spec.probes.readiness.port}, "initialDelaySeconds": schema.spec.probes.readiness.initialDelaySeconds, "periodSeconds": schema.spec.probes.readiness.periodSeconds, "timeoutSeconds": schema.spec.probes.readiness.timeoutSeconds, "successThreshold": schema.spec.probes.readiness.successThreshold, "failureThreshold": schema.spec.probes.readiness.failureThreshold}) : null}
+            startupProbe: ${schema.spec.probes.startup.enabled ? (schema.spec.probes.startup.custom != null ? schema.spec.probes.startup.custom : {"httpGet": {"path": schema.spec.probes.startup.path, "port": schema.spec.probes.startup.port}, "initialDelaySeconds": schema.spec.probes.startup.initialDelaySeconds, "periodSeconds": schema.spec.probes.startup.periodSeconds, "timeoutSeconds": schema.spec.probes.startup.timeoutSeconds, "successThreshold": schema.spec.probes.startup.successThreshold, "failureThreshold": schema.spec.probes.startup.failureThreshold}) : null}
+        nodeSelector: ${schema.spec.scheduling.nodeSelector}
+        affinity: ${schema.spec.scheduling.affinity}
+        tolerations: ${schema.spec.scheduling.tolerations}
+        topologySpreadConstraints: ${schema.spec.scheduling.topologySpread.enabled ? ([{"maxSkew": schema.spec.scheduling.topologySpread.maxSkew, "topologyKey": schema.spec.scheduling.topologySpread.topologyKey, "whenUnsatisfiable": schema.spec.scheduling.topologySpread.whenUnsatisfiable, "labelSelector": {"matchLabels": {"app.kubernetes.io/name": schema.metadata.name}}}] + schema.spec.scheduling.topologySpread.customConstraints) : schema.spec.scheduling.topologySpread.customConstraints}
+
+  resources:
+    - id: serviceAccount
+      includeWhen:
+        - ${schema.spec.serviceAccount.create}
+      template:
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: ${schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : schema.metadata.name}
+
+    - id: configMap
+      includeWhen:
+        - ${schema.spec.configMap.enabled}
+      template:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: ${schema.metadata.name}
+        data: ${schema.spec.configMap.data}
+
+    - id: secret
+      includeWhen:
+        - ${schema.spec.secret.enabled}
+      template:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: ${schema.metadata.name}
+        stringData: ${schema.spec.secret.data}
