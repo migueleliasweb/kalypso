@@ -19,3 +19,11 @@ Refer to [KALYPSO_KNOWLEDGE.md](file:///Users/miguel.santos/Projects/personal/ka
 ## KRO CLI
 
 Use `kro (generate|validate)` as part of the test harness to quickly validate a KRO RGD against test instances.
+
+## Testing
+
+- The testing is implemented using Kubernetes E2E Framework + KinD. It allows us to test the RGDs and CRDs againt a real running cluster.
+- Tests also use KRO cli to validate the test data.
+- Tests must not rely on external scripts (bash, Makefile, etc).
+- The whole test suite must be run using `go test -v` and must not require pre-post steps to be performed manually.
+- The KinD cluster should be created and torn down (conditionally via an env var - default to `yes`) as part of the test suite.
