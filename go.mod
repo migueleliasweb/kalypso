@@ -3,6 +3,7 @@ module github.com/migueleliasweb/kalypso
 go 1.26.4
 
 require (
+	github.com/spf13/cobra v1.10.0
 	k8s.io/api v0.35.3
 	k8s.io/apimachinery v0.35.3
 	sigs.k8s.io/e2e-framework v0.7.0
@@ -24,6 +25,7 @@ require (
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

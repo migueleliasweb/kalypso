@@ -20,8 +20,12 @@ spec:
       args: "[]string | default=[]"
       env: "[]object | default=[]"
       resources:
-        cpu: string | default="200m"
-        memory: string | default="128Mi"
+        requests:
+          cpu: string | default="200m"
+          memory: string | default="128Mi"
+        limits:
+          cpu: string
+          memory: string
       probes:
         liveness:
           enabled: boolean | default=true
@@ -73,6 +77,8 @@ spec:
       secret:
         enabled: boolean | default=false
         data: "map[string]string"
+      volumes: "[]object | default=[]"
+      volumeMounts: "[]object | default=[]"
 
       # --- Workload-level features
       pdb:
@@ -111,6 +117,8 @@ spec:
           scheduling: '${schema.spec.scheduling}'
           configMap: '${schema.spec.configMap}'
           secret: '${schema.spec.secret}'
+          volumes: '${schema.spec.volumes}'
+          volumeMounts: '${schema.spec.volumeMounts}'
       readyWhen:
         - '${podSpec.status.state == "ACTIVE"}'
 
