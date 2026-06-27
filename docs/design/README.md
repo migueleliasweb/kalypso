@@ -4,6 +4,8 @@
 
 The V1Alpha1 release will provide support for core Kubernetes compute-related components as Kalypso building blocks. The goal of the V1Alpha1 release is to provide a solid foundation for future development and to demonstrate the value of `Kalypso`.
 
+A test harness to allow quick iteration on the CRDs and RGDs provided by `Kalypso` using the Kubernetes e2e framework + KinD.
+
 ## Release V1Alpha2
 
 The V1Alpha2 release will provide support for all core Kubernetes components as Kalypso building blocks.
