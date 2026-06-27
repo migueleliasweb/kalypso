@@ -29,3 +29,4 @@ Use `kro (generate|validate)` as part of the test harness to quickly validate a 
 - The KinD cluster should be created and torn down (conditionally via an env var - default to `yes`) as part of the test suite.
 - On start, the test suite must tear down existing matching cluster to ensure tests run on a clean slate. Testing cluster must never be reused to ensure tests are properly run and won't be affected by previous runs.
 - Resources created by the cluster should always be left behind to further troubleshooting can be performed. The resources will be deleted once the cluster itself is deleted.
+- Once the e2e tests are run, perform checks every 20s to validate the state. If errors are found, perform the fixes and rerun the tests. The tests must be run with a timeout of 8 minutes.
