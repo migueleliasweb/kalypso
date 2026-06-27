@@ -523,7 +523,7 @@ func ConvertManifests(data []byte, targetNamespace string) ([]byte, bool, error)
 
 	// Final CR mapping
 	compute := map[string]interface{}{
-		"apiVersion": "kalypso.lmoet.io/v1alpha1",
+		"apiVersion": "kalypso.lmoet.io/v1alpha2",
 		"kind":       "Compute",
 		"metadata": map[string]interface{}{
 			"name":      workloadName,

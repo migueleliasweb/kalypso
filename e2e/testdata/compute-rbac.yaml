@@ -1,0 +1,17 @@
+apiVersion: kalypso.lmoet.io/v1alpha2
+kind: Compute
+metadata:
+  name: compute-rbac
+spec:
+  image: gcr.io/google-samples/hello-app:1.0
+  serviceAccount:
+    create: true
+  rbac:
+    rules:
+      - apiGroups: [""]
+        resources: ["configmaps"]
+        verbs: ["get", "list", "watch"]
+    clusterRules:
+      - apiGroups: [""]
+        resources: ["nodes"]
+        verbs: ["get", "list"]

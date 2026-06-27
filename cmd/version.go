@@ -11,7 +11,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print the version number of Kalypso CLI",
 	Long:  `All software has versions. This is Kalypso CLI's.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("v1alpha1-rev1")
+		fmt.Println("v1alpha2")
 	},
 }
 

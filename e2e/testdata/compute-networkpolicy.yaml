@@ -1,0 +1,26 @@
+apiVersion: kalypso.lmoet.io/v1alpha2
+kind: Compute
+metadata:
+  name: compute-networkpolicy
+spec:
+  image: gcr.io/google-samples/hello-app:1.0
+  networkPolicy:
+    enabled: true
+    ingress:
+      allowFrom:
+        - from:
+            - podSelector:
+                matchLabels:
+                  role: frontend
+          ports:
+            - protocol: TCP
+              port: 8080
+    egress:
+      allowTo:
+        - to:
+            - namespaceSelector:
+                matchLabels:
+                  kubernetes.io/metadata.name: kube-system
+          ports:
+            - protocol: UDP
+              port: 53

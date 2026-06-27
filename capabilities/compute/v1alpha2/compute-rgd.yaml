@@ -1,0 +1,331 @@
+apiVersion: kro.run/v1alpha1
+kind: ResourceGraphDefinition
+metadata:
+  name: compute
+spec:
+  schema:
+    apiVersion: v1alpha2
+    kind: Compute
+    group: kalypso.lmoet.io
+    scope: Namespaced
+
+    spec:
+      workloadType: string | default="Deployment" enum="Deployment,StatefulSet,DaemonSet" description="The type of workload to run"
+      replicas: integer | default=1 minimum=1 description="Number of desired replicas (only for Deployment/StatefulSet)"
+
+      # --- Delegate Container/Pod specification fields to PodSpec CRD
+      image: string | required=true description="Container image to run"
+      port: integer | default=8080 description="Container port the application listens on"
+      command: "[]string | default=[]"
+      args: "[]string | default=[]"
+      env: "[]object | default=[]"
+      resources:
+        requests:
+          cpu: string | default="200m"
+          memory: string | default="128Mi"
+        limits:
+          cpu: string
+          memory: string
+      probes:
+        liveness:
+          enabled: boolean | default=true
+          path: string | default="/healthz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+        readiness:
+          enabled: boolean | default=true
+          path: string | default="/readyz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+        startup:
+          enabled: boolean | default=false
+          path: string | default="/healthz"
+          port: integer | default=8080
+          initialDelaySeconds: integer | default=0
+          periodSeconds: integer | default=10
+          timeoutSeconds: integer | default=1
+          successThreshold: integer | default=1
+          failureThreshold: integer | default=3
+          custom: object
+      restartPolicy: string | default="Always" enum="Always"
+      serviceAccount:
+        create: boolean | default=true
+        name: string | default=""
+      scheduling:
+        nodeSelector: "map[string]string"
+        affinity: object
+        tolerations: "[]object | default=[]"
+        topologySpread:
+          enabled: boolean | default=true
+          maxSkew: integer | default=1
+          topologyKey: string | default="kubernetes.io/hostname"
+          whenUnsatisfiable: string | default="ScheduleAnyway"
+          customConstraints: "[]object | default=[]"
+      configMap:
+        enabled: boolean | default=false
+        data: "map[string]string"
+      secret:
+        enabled: boolean | default=false
+        data: "map[string]string"
+      volumes: "[]object | default=[]"
+      volumeMounts: "[]object | default=[]"
+
+      # --- Workload-level features
+      pdb:
+        enabled: boolean | default=true description="Whether to create a PodDisruptionBudget"
+        maxUnavailable: string | default="1" description="Number/percentage of pods that can be unavailable"
+      autoscaling:
+        enabled: boolean | default=false
+        minReplicas: integer | default=1 minimum=1
+        maxReplicas: integer | default=10 minimum=1
+        targetCPUUtilization: integer | default=80 minimum=1 maximum=100
+      volumeClaimTemplates: "[]object | default=[]"
+
+      # --- RBAC Support
+      rbac:
+        rules: '[]object | default=[] description="Optional namespaced RBAC rules (creates Role & RoleBinding)"'
+        clusterRules: '[]object | default=[] description="Optional cluster-wide RBAC rules (creates ClusterRole & ClusterRoleBinding)"'
+
+      # --- NetworkPolicy Support
+      networkPolicy:
+        enabled: boolean | default=false description="Whether to enable NetworkPolicy creation for this workload"
+        ingress:
+          allowFrom: '[]object | default=[] description="List of ingress rules (podSelector, namespaceSelector, ipBlock, ports)"'
+        egress:
+          allowTo: '[]object | default=[] description="List of egress rules (podSelector, namespaceSelector, ipBlock, ports)"'
+
+    status:
+      readyReplicas: '${deployment != null ? (has(deployment.status.readyReplicas) ? deployment.status.readyReplicas : 0) : (statefulSet != null ? (has(statefulSet.status.readyReplicas) ? statefulSet.status.readyReplicas : 0) : (daemonSet != null ? (has(daemonSet.status.numberReady) ? daemonSet.status.numberReady : 0) : 0))}'
+      replicas: '${deployment != null ? (has(deployment.status.replicas) ? deployment.status.replicas : 0) : (statefulSet != null ? (has(statefulSet.status.replicas) ? statefulSet.status.replicas : 0) : (daemonSet != null ? (has(daemonSet.status.desiredNumberScheduled) ? daemonSet.status.desiredNumberScheduled : 0) : 0))}'
+
+
+  resources:
+    # --- Chained PodSpec instance
+    - id: podSpec
+      template:
+        apiVersion: kalypso.lmoet.io/v1alpha2
+        kind: PodSpec
+        metadata:
+          name: '${schema.metadata.name}'
+        spec:
+          image: '${schema.spec.image}'
+          port: '${schema.spec.port}'
+          command: '${schema.spec.command}'
+          args: '${schema.spec.args}'
+          env: '${schema.spec.env}'
+          resources: '${schema.spec.resources}'
+          probes: '${schema.spec.probes}'
+          restartPolicy: '${schema.spec.restartPolicy}'
+          serviceAccount: '${schema.spec.serviceAccount}'
+          scheduling: '${schema.spec.scheduling}'
+          configMap: '${schema.spec.configMap}'
+          secret: '${schema.spec.secret}'
+          volumes: '${schema.spec.volumes}'
+          volumeMounts: '${schema.spec.volumeMounts}'
+      readyWhen:
+        - '${podSpec.status.state == "ACTIVE"}'
+
+    # --- Deployment (conditional)
+    - id: deployment
+      includeWhen:
+        - '${schema.spec.workloadType == "Deployment"}'
+      template:
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          replicas: '${schema.spec.replicas}'
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: '${schema.metadata.name}'
+          template:
+            metadata:
+              labels:
+                app.kubernetes.io/name: '${schema.metadata.name}'
+            spec: '${dyn(podSpec.status.podSpec)}'
+      readyWhen:
+        - '${deployment.status.readyReplicas == deployment.spec.replicas}'
+
+    # --- StatefulSet (conditional)
+    - id: statefulSet
+      includeWhen:
+        - '${schema.spec.workloadType == "StatefulSet"}'
+      template:
+        apiVersion: apps/v1
+        kind: StatefulSet
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          serviceName: '${schema.metadata.name}'
+          replicas: '${schema.spec.replicas}'
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: '${schema.metadata.name}'
+          template:
+            metadata:
+              labels:
+                app.kubernetes.io/name: '${schema.metadata.name}'
+            spec: '${dyn(podSpec.status.podSpec)}'
+          volumeClaimTemplates: '${schema.spec.volumeClaimTemplates}'
+      readyWhen:
+        - '${statefulSet.status.readyReplicas == statefulSet.spec.replicas}'
+
+    # --- DaemonSet (conditional)
+    - id: daemonSet
+      includeWhen:
+        - '${schema.spec.workloadType == "DaemonSet"}'
+      template:
+        apiVersion: apps/v1
+        kind: DaemonSet
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: '${schema.metadata.name}'
+          template:
+            metadata:
+              labels:
+                app.kubernetes.io/name: '${schema.metadata.name}'
+            spec: '${dyn(podSpec.status.podSpec)}'
+      readyWhen:
+        - '${daemonSet.status.numberReady == daemonSet.status.desiredNumberScheduled}'
+
+    # --- HorizontalPodAutoscaler (conditional)
+    - id: hpa
+      includeWhen:
+        - '${schema.spec.autoscaling.enabled && (schema.spec.workloadType == "Deployment" || schema.spec.workloadType == "StatefulSet")}'
+      template:
+        apiVersion: autoscaling/v2
+        kind: HorizontalPodAutoscaler
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: '${schema.spec.workloadType}'
+            name: '${schema.metadata.name}'
+          minReplicas: '${schema.spec.autoscaling.minReplicas}'
+          maxReplicas: '${schema.spec.autoscaling.maxReplicas}'
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: '${schema.spec.autoscaling.targetCPUUtilization}'
+
+    # --- PodDisruptionBudget (conditional)
+    - id: pdb
+      includeWhen:
+        - '${schema.spec.pdb.enabled}'
+      template:
+        apiVersion: policy/v1
+        kind: PodDisruptionBudget
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          selector:
+            matchLabels:
+              app.kubernetes.io/name: '${schema.metadata.name}'
+          maxUnavailable: '${schema.spec.pdb.maxUnavailable.endsWith("%") ? dyn(schema.spec.pdb.maxUnavailable) : dyn(int(schema.spec.pdb.maxUnavailable))}'
+
+    # --- Namespaced RBAC Role (conditional)
+    - id: role
+      includeWhen:
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
+      template:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: Role
+        metadata:
+          name: '${schema.metadata.name}'
+        rules: '${schema.spec.rbac.rules}'
+
+    # --- Namespaced RBAC RoleBinding (conditional)
+    - id: roleBinding
+      includeWhen:
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
+      template:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          name: '${schema.metadata.name}'
+        subjects:
+          - kind: ServiceAccount
+            name: '${schema.spec.serviceAccount.create ? (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : schema.metadata.name) : (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : "default")}'
+            namespace: '${schema.metadata.namespace}'
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: Role
+          name: '${schema.metadata.name}'
+
+    # --- Cluster RBAC ClusterRole (conditional)
+    - id: clusterRole
+      includeWhen:
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
+      template:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: '${schema.metadata.namespace}-${schema.metadata.name}'
+        rules: '${schema.spec.rbac.clusterRules}'
+
+    # --- Cluster RBAC ClusterRoleBinding (conditional)
+    - id: clusterRoleBinding
+      includeWhen:
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
+      template:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: '${schema.metadata.namespace}-${schema.metadata.name}'
+        subjects:
+          - kind: ServiceAccount
+            name: '${schema.spec.serviceAccount.create ? (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : schema.metadata.name) : (schema.spec.serviceAccount.name != "" ? schema.spec.serviceAccount.name : "default")}'
+            namespace: '${schema.metadata.namespace}'
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: '${schema.metadata.namespace}-${schema.metadata.name}'
+
+    # --- NetworkPolicy (conditional)
+    - id: networkPolicy
+      includeWhen:
+        - '${has(schema.spec.networkPolicy) && has(schema.spec.networkPolicy.enabled) ? schema.spec.networkPolicy.enabled : false}'
+      template:
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: '${schema.metadata.name}'
+          labels:
+            app.kubernetes.io/name: '${schema.metadata.name}'
+        spec:
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: '${schema.metadata.name}'
+          policyTypes:
+            - Ingress
+            - Egress
+          ingress: '${has(schema.spec.networkPolicy) && has(schema.spec.networkPolicy.ingress) && has(schema.spec.networkPolicy.ingress.allowFrom) ? dyn(schema.spec.networkPolicy.ingress.allowFrom) : dyn([])}'
+          egress: '${has(schema.spec.networkPolicy) && has(schema.spec.networkPolicy.egress) && has(schema.spec.networkPolicy.egress.allowTo) ? dyn(schema.spec.networkPolicy.egress.allowTo) : dyn([])}'
