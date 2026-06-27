@@ -38,25 +38,24 @@ const (
 	kroDeploymentName = "kro"
 )
 
-// The Workload RGD under test and the API it generates.
+// The RGDs under test and the APIs they generate.
 const (
-	rgdPath         = "../workload-rgd.yaml" // RGD lives at the folder root
-	rgdName         = "workload-rgd"         // metadata.name inside the RGD
-	workloadCRDName = "workloads.kalypso.io"
+	podSpecRGDPath = "../capabilities/compute/v1alpha1/podspec-rgd.yaml"
+	podSpecRGDName = "podspec"
+	podSpecCRDName = "podspecs.kalypso.lmoet.io"
 
-	// ClusterWorkload (cluster-scoped, namespace-owning) chains the Workload RGD.
-	clusterRGDPath         = "../clusterworkload-rgd.yaml"
-	clusterRGDName         = "clusterworkload-rgd"
-	clusterWorkloadCRDName = "clusterworkloads.kalypso.io"
+	rgdPath        = "../capabilities/compute/v1alpha1/compute-rgd.yaml"
+	rgdName        = "compute"
+	computeCRDName = "computes.kalypso.lmoet.io"
 
-	workloadGroup       = "kalypso.io"
-	workloadVersion     = "v1alpha1"
-	workloadKind        = "Workload"
-	clusterWorkloadKind = "ClusterWorkload"
+	workloadGroup   = "kalypso.lmoet.io"
+	workloadVersion = "v1alpha1"
+	workloadKind    = "Compute"
 
-	// testNamespace is where namespaced Workload instances (and their children) go.
+	// testNamespace is where namespaced instances (and their children) go.
 	testNamespace = "workloads"
 )
+
 
 var (
 	kroManifest = manifestSpec{

@@ -21,141 +21,6 @@ import (
 	"sigs.k8s.io/e2e-framework/pkg/features"
 )
 
-// Resource GVKs the RGDs manage.
-var (
-	namespaceGVK       = schema.GroupVersionKind{Version: "v1", Kind: "Namespace"}
-	serviceGVK         = schema.GroupVersionKind{Version: "v1", Kind: "Service"}
-	hpaGVK             = schema.GroupVersionKind{Group: "autoscaling", Version: "v2", Kind: "HorizontalPodAutoscaler"}
-	virtualServiceGVK  = schema.GroupVersionKind{Group: "networking.istio.io", Version: "v1", Kind: "VirtualService"}
-	destinationRuleGVK = schema.GroupVersionKind{Group: "networking.istio.io", Version: "v1", Kind: "DestinationRule"}
-	serviceMonitorGVK  = schema.GroupVersionKind{Group: "monitoring.coreos.com", Version: "v1", Kind: "ServiceMonitor"}
-	workloadGVK        = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: workloadKind}
-	clusterWorkloadGVK = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: clusterWorkloadKind}
-)
-
-// TestWorkloadMinimal applies a compute-only Workload and asserts the RGD
-// creates only a Deployment + Service — every disabled capability's resource
-// must be absent, validating includeWhen's default-off behavior.
-func TestWorkloadMinimal(t *testing.T) {
-	const name = "hello"
-
-	feat := features.New("workload/minimal").
-		Setup(applyNamespaced("testdata/workload-minimal.yaml")).
-		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
-		Assess("service present", assertExists(
-			serviceGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("hpa absent", assertAbsent(
-			hpaGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("virtualservice absent", assertAbsent(
-			virtualServiceGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("destinationrule absent", assertAbsent(
-			destinationRuleGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("servicemonitor absent", assertAbsent(
-			serviceMonitorGVK,
-			testNamespace,
-			name,
-		)).
-		Teardown(deleteInstance(
-			workloadGVK,
-			testNamespace,
-			name,
-		)).
-		Feature()
-
-	testenv.Test(t, feat)
-}
-
-// TestWorkloadFull enables every capability and asserts the full resource set
-// is created, validating includeWhen's on-path.
-func TestWorkloadFull(t *testing.T) {
-	const name = "payments"
-
-	feat := features.New("workload/full").
-		Setup(applyNamespaced("testdata/workload-full.yaml")).
-		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
-		Assess("service present", assertExists(
-			serviceGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("hpa present", assertExists(
-			hpaGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("virtualservice present", assertExists(
-			virtualServiceGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("destinationrule present", assertExists(
-			destinationRuleGVK,
-			testNamespace,
-			name,
-		)).
-		Assess("servicemonitor present", assertExists(
-			serviceMonitorGVK,
-			testNamespace,
-			name,
-		)).
-		Teardown(deleteInstance(
-			workloadGVK,
-			testNamespace,
-			name,
-		)).
-		Feature()
-
-	testenv.Test(t, feat)
-}
-
-// TestClusterWorkload applies a cluster-scoped ClusterWorkload and asserts it
-// creates and owns a namespace, then (via RGD chaining) a Workload inside it
-// whose Deployment + Service come up — validating the namespace-owning variant.
-func TestClusterWorkload(t *testing.T) {
-	const name = "tenant-a" // namespace defaults to the instance name
-
-	feat := features.New("clusterworkload").
-		Setup(applyClusterScoped("testdata/clusterworkload.yaml")).
-		Assess("namespace created", assertExists(
-			namespaceGVK,
-			"",
-			name,
-		)).
-		Assess("workload created in owned ns", assertExists(
-			workloadGVK,
-			name,
-			name,
-		)).
-		Assess("deployment available in owned ns", assertDeploymentAvailable(name, name)).
-		Assess("service present in owned ns", assertExists(
-			serviceGVK,
-			name,
-			name,
-		)).
-		Teardown(deleteInstance(
-			clusterWorkloadGVK,
-			"",
-			name,
-		)).
-		Feature()
-
-	testenv.Test(t, feat)
-}
-
-// --- feature helpers ---------------------------------------------------------
-
 // applyNamespaced creates a namespaced instance in the suite's test namespace.
 func applyNamespaced(path string) features.Func {
 	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
@@ -249,6 +114,72 @@ func assertDeploymentAvailable(namespace, name string) features.Func {
 		if err != nil {
 			t.Fatalf(
 				"deployment %s/%s never became available: %v",
+				namespace,
+				name,
+				err,
+			)
+		}
+
+		return ctx
+	}
+}
+
+func assertStatefulSetAvailable(namespace, name string) features.Func {
+	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+		r := cfg.Client().Resources()
+
+		sts := &appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+		}
+
+		err := wait.For(
+			conditions.New(r).ResourceMatch(sts, func(o k8s.Object) bool {
+				s := o.(*appsv1.StatefulSet)
+				return s.Status.ReadyReplicas == *s.Spec.Replicas
+			}),
+			wait.WithTimeout(3*time.Minute),
+			wait.WithInterval(3*time.Second),
+		)
+
+		if err != nil {
+			t.Fatalf(
+				"statefulset %s/%s never became available: %v",
+				namespace,
+				name,
+				err,
+			)
+		}
+
+		return ctx
+	}
+}
+
+func assertDaemonSetAvailable(namespace, name string) features.Func {
+	return func(ctx context.Context, t *testing.T, cfg *envconf.Config) context.Context {
+		r := cfg.Client().Resources()
+
+		ds := &appsv1.DaemonSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      name,
+				Namespace: namespace,
+			},
+		}
+
+		err := wait.For(
+			conditions.New(r).ResourceMatch(ds, func(o k8s.Object) bool {
+				d := o.(*appsv1.DaemonSet)
+				return d.Status.NumberReady == d.Status.DesiredNumberScheduled
+			}),
+			wait.WithTimeout(3*time.Minute),
+			wait.WithInterval(3*time.Second),
+		)
+
+		if err != nil {
+			t.Fatalf(
+				"daemonset %s/%s never became available: %v",
 				namespace,
 				name,
 				err,

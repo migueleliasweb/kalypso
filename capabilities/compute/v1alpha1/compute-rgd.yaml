@@ -86,8 +86,9 @@ spec:
       volumeClaimTemplates: "[]object | default=[]"
 
     status:
-      readyReplicas: '${schema.spec.workloadType == "Deployment" ? (deployment.status.readyReplicas != null ? deployment.status.readyReplicas : 0) : (schema.spec.workloadType == "StatefulSet" ? (statefulSet.status.readyReplicas != null ? statefulSet.status.readyReplicas : 0) : (daemonSet.status.numberReady != null ? daemonSet.status.numberReady : 0))}'
-      replicas: '${schema.spec.workloadType == "Deployment" ? (deployment.status.replicas != null ? deployment.status.replicas : 0) : (schema.spec.workloadType == "StatefulSet" ? (statefulSet.status.replicas != null ? statefulSet.status.replicas : 0) : (daemonSet.status.desiredNumberScheduled != null ? daemonSet.status.desiredNumberScheduled : 0))}'
+      readyReplicas: '${deployment != null ? (has(deployment.status.readyReplicas) ? deployment.status.readyReplicas : 0) : (statefulSet != null ? (has(statefulSet.status.readyReplicas) ? statefulSet.status.readyReplicas : 0) : (daemonSet != null ? (has(daemonSet.status.numberReady) ? daemonSet.status.numberReady : 0) : 0))}'
+      replicas: '${deployment != null ? (has(deployment.status.replicas) ? deployment.status.replicas : 0) : (statefulSet != null ? (has(statefulSet.status.replicas) ? statefulSet.status.replicas : 0) : (daemonSet != null ? (has(daemonSet.status.desiredNumberScheduled) ? daemonSet.status.desiredNumberScheduled : 0) : 0))}'
+
 
   resources:
     # --- Chained PodSpec instance
@@ -133,7 +134,7 @@ spec:
             metadata:
               labels:
                 app.kubernetes.io/name: '${schema.metadata.name}'
-            spec: '${podSpec.status.podSpec}'
+            spec: '${dyn(podSpec.status.podSpec)}'
       readyWhen:
         - '${deployment.status.readyReplicas == deployment.spec.replicas}'
 
@@ -158,7 +159,7 @@ spec:
             metadata:
               labels:
                 app.kubernetes.io/name: '${schema.metadata.name}'
-            spec: '${podSpec.status.podSpec}'
+            spec: '${dyn(podSpec.status.podSpec)}'
           volumeClaimTemplates: '${schema.spec.volumeClaimTemplates}'
       readyWhen:
         - '${statefulSet.status.readyReplicas == statefulSet.spec.replicas}'
@@ -182,7 +183,7 @@ spec:
             metadata:
               labels:
                 app.kubernetes.io/name: '${schema.metadata.name}'
-            spec: '${podSpec.status.podSpec}'
+            spec: '${dyn(podSpec.status.podSpec)}'
       readyWhen:
         - '${daemonSet.status.numberReady == daemonSet.status.desiredNumberScheduled}'
 

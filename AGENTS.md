@@ -27,5 +27,5 @@ Use `kro (generate|validate)` as part of the test harness to quickly validate a 
 - Tests must not rely on external scripts (bash, Makefile, etc).
 - The whole test suite must be run using `go test -v` and must not require pre-post steps to be performed manually.
 - The KinD cluster should be created and torn down (conditionally via an env var - default to `yes`) as part of the test suite.
-- On start, the test suite must tear down existing matching cluster to ensure tests run on a clean slate.
+- On start, the test suite must tear down existing matching cluster to ensure tests run on a clean slate. Testing cluster must never be reused to ensure tests are properly run and won't be affected by previous runs.
 - Resources created by the cluster should always be left behind to further troubleshooting can be performed. The resources will be deleted once the cluster itself is deleted.

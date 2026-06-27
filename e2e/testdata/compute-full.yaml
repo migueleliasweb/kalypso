@@ -1,0 +1,30 @@
+apiVersion: kalypso.lmoet.io/v1alpha1
+kind: Compute
+metadata:
+  name: compute-full
+spec:
+  workloadType: Deployment
+  image: registry.k8s.io/pause:3.9
+  port: 8080
+  replicas: 2
+  resources:
+    cpu: "200m"
+    memory: "128Mi"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilization: 80
+  pdb:
+    enabled: true
+    maxUnavailable: "1"
+  configMap:
+    enabled: true
+    data:
+      CM_KEY_1: "cm_val_1"
+  secret:
+    enabled: true
+    data:
+      SEC_KEY_1: "sec_val_1"
+  serviceAccount:
+    create: true

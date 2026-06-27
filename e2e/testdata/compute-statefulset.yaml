@@ -1,0 +1,8 @@
+apiVersion: kalypso.lmoet.io/v1alpha1
+kind: Compute
+metadata:
+  name: compute-statefulset
+spec:
+  workloadType: StatefulSet
+  image: registry.k8s.io/pause:3.9
+  replicas: 2

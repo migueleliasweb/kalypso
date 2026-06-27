@@ -8,8 +8,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"strconv"
 	"testing"
 	"time"
 
@@ -74,12 +74,24 @@ func TestMain(m *testing.M) {
 }
 
 // shouldDestroy reports whether the suite should tear things down (cluster and
-// Workload instances). Default is false so everything lingers for inspection.
+// instances). Default is true to avoid lingering resources; set this to false
+// to leave the cluster running.
 func shouldDestroy() bool {
-	destroy, _ := strconv.ParseBool(os.Getenv(destroyEnvVar))
-
-	return destroy
+	val, ok := os.LookupEnv(destroyEnvVar)
+	if !ok {
+		return true
+	}
+	switch val {
+	case "yes", "true", "1", "y", "Y":
+		return true
+	case "no", "false", "0", "n", "N":
+		return false
+	default:
+		return true
+	}
 }
+
+
 
 // installCRDs fetches and applies the Istio + Prometheus CRDs the Workload RGD
 // references, so KRO can create those kinds when capabilities are enabled.
@@ -140,29 +152,38 @@ func installKRO(ctx context.Context, cfg *envconf.Config) (context.Context, erro
 	return ctx, nil
 }
 
-// applyRGDs applies the Workload RGD first (the ClusterWorkload RGD's graph
-// references the generated Workload CRD), then the ClusterWorkload RGD.
+// applyRGDs applies the PodSpec RGD first (the Compute RGD references it), then the Compute RGD.
 func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
 	r := cfg.Client().Resources()
+
+	// Validate PodSpec RGD using KRO CLI
+	if err := kroValidateRGD(podSpecRGDPath); err != nil {
+		return ctx, fmt.Errorf("KRO CLI validation failed for PodSpec RGD: %w", err)
+	}
 
 	err := applyAndWaitRGD(
 		ctx,
 		r,
-		rgdPath,
-		rgdName,
-		workloadCRDName,
+		podSpecRGDPath,
+		podSpecRGDName,
+		podSpecCRDName,
 	)
 
 	if err != nil {
 		return ctx, err
 	}
 
+	// Validate Compute RGD using KRO CLI (now that PodSpec CRD is established)
+	if err := kroValidateRGD(rgdPath); err != nil {
+		return ctx, fmt.Errorf("KRO CLI validation failed for Compute RGD: %w", err)
+	}
+
 	err = applyAndWaitRGD(
 		ctx,
 		r,
-		clusterRGDPath,
-		clusterRGDName,
-		clusterWorkloadCRDName,
+		rgdPath,
+		rgdName,
+		computeCRDName,
 	)
 
 	if err != nil {
@@ -171,6 +192,19 @@ func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error
 
 	return ctx, nil
 }
+
+func kroValidateRGD(rgdPath string) error {
+	cmd := exec.Command("kro", "validate", "rgd", "-f", rgdPath)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("kro validate command run failed: %w\nstdout: %s\nstderr: %s", err, stdout.String(), stderr.String())
+	}
+	return nil
+}
+
+
 
 // applyAndWaitRGD applies an RGD manifest then waits for its generated CRD to be
 // Established and the RGD itself to reach state Active (dynamic controller up).
