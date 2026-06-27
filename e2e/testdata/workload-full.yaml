@@ -1,0 +1,36 @@
+apiVersion: kalypso.io/v1alpha1
+kind: Workload
+metadata:
+  name: payments
+spec:
+  # Every capability is enabled, so the RGD should create the full set:
+  # Deployment + HPA + Service + Istio VirtualService/DestinationRule +
+  # Prometheus ServiceMonitor.
+  compute:
+    image: registry.k8s.io/pause:3.9
+    port: 8080
+    resources:
+      requests: { cpu: 50m, memory: 32Mi }
+      limits: { cpu: 100m, memory: 64Mi }
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilization: 80
+  networking:
+    expose: true
+    port: 80
+    mesh:
+      enabled: true
+      host: payments.acme.internal
+      gateway: mesh
+  observability:
+    enabled: true
+    path: /metrics
+    port: http
+    interval: 15s
+  security:
+    runAsNonRoot: true
+    runAsUser: 1000
+    readOnlyRootFilesystem: true
+    dropCapabilities: ["ALL"]

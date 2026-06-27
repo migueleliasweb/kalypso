@@ -32,3 +32,8 @@ go.work.sum
 # .idea/
 # .vscode/
 
+# Third-party CRD/install manifests fetched by the e2e tests at runtime (cached).
+e2e/crd-manifests/
+
+# e2e cluster logs exported on teardown.
+e2e/logs/
