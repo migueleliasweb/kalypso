@@ -4,4 +4,4 @@ metadata:
   name: compute-daemonset
 spec:
   workloadType: DaemonSet
-  image: registry.k8s.io/pause:3.9
+  image: gcr.io/google-samples/hello-app:1.0

@@ -228,4 +228,4 @@ spec:
           selector:
             matchLabels:
               app.kubernetes.io/name: '${schema.metadata.name}'
-          maxUnavailable: '${schema.spec.pdb.maxUnavailable}'
+          maxUnavailable: '${schema.spec.pdb.maxUnavailable.endsWith("%") ? dyn(schema.spec.pdb.maxUnavailable) : dyn(int(schema.spec.pdb.maxUnavailable))}'

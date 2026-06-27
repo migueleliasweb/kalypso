@@ -4,7 +4,7 @@ metadata:
   name: compute-full
 spec:
   workloadType: Deployment
-  image: registry.k8s.io/pause:3.9
+  image: gcr.io/google-samples/hello-app:1.0
   port: 8080
   replicas: 2
   resources:
@@ -17,7 +17,7 @@ spec:
     targetCPUUtilization: 80
   pdb:
     enabled: true
-    maxUnavailable: "1"
+    maxUnavailable: "50%"
   configMap:
     enabled: true
     data:
