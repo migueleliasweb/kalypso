@@ -19,11 +19,11 @@ The `v1alpha2` release implements the **Compute** capability, offering the follo
 
 ---
 
-## Architectural Flow
+## How Kalypso Works
 
-Below is the graph representation of the resources instantiated by the `Compute` RGD. The `PodSpec` RGD is encapsulated as an internal chained resource resolving pod-level settings.
+Kalypso abstracts multi-resource deployments by providing a simple, high-level developer spec that automatically generates, binds, and manages a complete set of underlying Kubernetes resources.
 
-![Compute Flow Diagram](docs/images/compute-flow.svg)
+![Kalypso Concept Diagram](docs/images/kalypso-concept.svg)
 
 ---
 

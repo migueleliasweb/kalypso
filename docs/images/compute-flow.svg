@@ -90,13 +90,13 @@
   <g>
     <!-- Connect: Compute CR -> PodSpec Chained RGD -->
     <path d="M 230,220 L 290,220" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-blue)" />
-    <text class="arrow-text" x="238" y="210">Chains to</text>
+    <text class="arrow-text" x="260" y="210" text-anchor="middle">Chains to</text>
 
     <!-- Connect: PodTemplate -> Workloads (Central Hub Line) -->
     <path d="M 430,340 L 480,340 L 480,240 L 580,240" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
     <path d="M 480,240 L 480,140 L 580,140" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
     <path d="M 480,340 L 580,340" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <text class="arrow-text" x="488" y="130">Injects PodSpec</text>
+    <text class="arrow-text" x="530" y="130" text-anchor="middle">Injects PodSpec</text>
 
     <!-- Connect: Compute CR -> Workloads Selection Direct Paths (shows dependency + exclusivity) -->
     <path d="M 130,270 L 130,480 L 580,480" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
