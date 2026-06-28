@@ -62,14 +62,19 @@ KRO is a generic operator that can be used to manage Kubernetes resources. KRO i
     - Resource Quota: TBD
     - Limit Range: TBD
 
-## TargetRef
+## KRO `externalRef`
+
+When a capability is used in standalone mode, it must be able to target a specific resource in the cluster. This is why it must include a `externalRef`. See docs at [https://kro.run/docs/concepts/rgd/resource-definitions/external-references](https://kro.run/docs/concepts/rgd/resource-definitions/external-references).
 
 ```yaml
-   targetRef:
-      apiVersion: "apps/v1" # TBD: Maybe we don't need this? 
-      kind: "Deployment" # TBD: Maybe we don't need this?
-      name: "nginx"
-      namespace: "default" # Optional, defaults to the namespace of the capability CRD
+resources:
+  - id: sharedConfig
+    externalRef:
+      apiVersion: <apiVersion> # E.g "v1
+      kind: <kind> # E.g "ConfigMap"
+      metadata:
+        name: <name> # E.g "some-config"
+        namespace: <namespace> # E.g "configmap-namespace"
 ```
 
 ## Kalypso CLI (TBD)
@@ -77,6 +82,8 @@ KRO is a generic operator that can be used to manage Kubernetes resources. KRO i
 The Kalypso CLI is planned to provide higher-level features to manage validate and explore different capabilities provided by `Kalypso`.
 
 ## Releases
+
+When creating a new release, copy all RGDs from the previous release and start working on them intead of creating new ones from scratch.
 
 ### Release V1Alpha1
 
@@ -90,12 +97,8 @@ The V1Alpha2 release will provide support for other (core) compute-related Kuber
 
 ### Release V1Alpha3
 
-The V1Alpha3 release will provide support for Networking-related Kubernetes components and initial integration with Istio-related capabilities as Kalypso building blocks.
+The V1Alpha3 release will provide support for Networking-related Kubernetes components and initial integration with Istio and GatewayAPI related capabilities as Kalypso building blocks.
 
 ### Release V1Alpha4
 
 The V1Alpha4 release will provide support for Observability-related Kubernetes components and initial integration with Prometheus-related capabilities as Kalypso building blocks.
-
-## #Release V1Alpha5
-
-The V1Alpha5 release will provide support for Security-related Kubernetes components and initial integration with RBAC-related capabilities as Kalypso building blocks.
