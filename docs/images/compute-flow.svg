@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 820" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 860" width="100%" height="100%">
   <!-- Styles for elements -->
   <style>
     .title { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 24px; font-weight: 800; fill: #F8FAFC; }
@@ -17,7 +17,7 @@
   </style>
 
   <!-- Background -->
-  <rect width="940" height="820" rx="16" fill="#0B0F19" />
+  <rect width="940" height="860" rx="16" fill="#0B0F19" />
 
   <!-- Gradients -->
   <defs>
@@ -73,7 +73,7 @@
   </g>
 
   <!-- Legend -->
-  <g transform="translate(680, 30)">
+  <g transform="translate(680, 20)">
     <rect x="0" y="0" width="220" height="120" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1" />
     <text class="label" x="15" y="22" font-size="11">Legend</text>
     <circle cx="20" cy="45" r="6" fill="#4F46E5" />
@@ -88,27 +88,27 @@
 
   <!-- Connector Lines Section -->
   <g>
-    <!-- Connect: Compute CR -> PodSpec Chained RGD -->
-    <path d="M 230,220 L 290,220" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-blue)" />
-    <text class="arrow-text" x="260" y="210" text-anchor="middle">Chains to</text>
+    <!-- Connect: Compute CR -> PodSpec Chained RGD (Widened space) -->
+    <path d="M 210,220 L 300,220" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-blue)" />
+    <text class="arrow-text" x="255" y="210" text-anchor="middle">Chains to</text>
 
     <!-- Connect: PodTemplate -> Workloads (Central Hub Line) -->
-    <path d="M 430,340 L 480,340 L 480,240 L 580,240" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <path d="M 480,240 L 480,140 L 580,140" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <path d="M 480,340 L 580,340" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <text class="arrow-text" x="530" y="130" text-anchor="middle">Injects PodSpec</text>
+    <path d="M 525,347 L 550,347 L 550,270 L 580,270" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
+    <path d="M 550,270 L 550,190 L 580,190" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
+    <path d="M 550,347 L 580,350" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
+    <text class="arrow-text" x="550" y="150" text-anchor="middle">Injects PodSpec</text>
 
     <!-- Connect: Compute CR -> Workloads Selection Direct Paths (shows dependency + exclusivity) -->
-    <path d="M 130,270 L 130,480 L 580,480" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 130,480 L 130,545 L 580,545" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 130,545 L 130,610 L 580,610" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 130,610 L 130,675 L 580,675" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 130,675 L 130,740 L 580,740" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 130,270 L 130,420 L 580,420" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,270 L 115,455 L 580,455" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,455 L 115,520 L 580,520" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,520 L 115,585 L 580,585" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,585 L 115,650 L 580,650" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,650 L 115,715 L 580,715" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
+    <path d="M 115,270 L 115,415 L 580,415" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
   </g>
 
   <!-- 1. INPUT LAYER: Compute CR -->
-  <g class="node-card" filter="url(#shadow)" transform="translate(40, 170)">
+  <g class="node-card" filter="url(#shadow)" transform="translate(20, 170)">
     <rect width="190" height="100" rx="10" fill="url(#grad-input)" stroke="#6366F1" stroke-width="2" />
     <text class="box-title" x="15" y="30">Compute CR</text>
     <text class="box-desc" x="15" y="48">kalypso.lmoet.io/v1alpha2</text>
@@ -118,7 +118,7 @@
   </g>
 
   <!-- 2. INTERNAL RESOLUTION LAYER: PodSpec RGD (Chained) -->
-  <g filter="url(#shadow)" transform="translate(290, 80)">
+  <g filter="url(#shadow)" transform="translate(300, 80)">
     <rect width="240" height="310" rx="12" fill="url(#grad-internal)" stroke="#475569" stroke-width="2" />
     <text class="box-title" x="15" y="25">PodSpec RGD (Chained)</text>
     <text class="box-desc" x="15" y="42">Internal resource mapping</text>
@@ -153,9 +153,9 @@
     </g>
   </g>
 
-  <!-- 3. CORE WORKLOAD LAYER: Exclusive Workloads -->
+  <!-- 3. CORE WORKLOAD LAYER: Exclusive Workloads (Shifted Downwards) -->
   <!-- Deployment -->
-  <g class="node-card" filter="url(#glow-teal)" transform="translate(580, 110)">
+  <g class="node-card" filter="url(#glow-teal)" transform="translate(580, 160)">
     <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="2" />
     <text class="box-title" x="15" y="25">Deployment</text>
     <text class="box-desc" x="15" y="45">Standard stateless workloads</text>
@@ -165,7 +165,7 @@
   </g>
 
   <!-- StatefulSet -->
-  <g class="node-card" transform="translate(580, 190)">
+  <g class="node-card" transform="translate(580, 240)">
     <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="1.5" />
     <text class="box-title" x="15" y="25">StatefulSet</text>
     <text class="box-desc" x="15" y="45">Stateful workloads with PVCs</text>
@@ -175,7 +175,7 @@
   </g>
 
   <!-- DaemonSet -->
-  <g class="node-card" transform="translate(580, 270)">
+  <g class="node-card" transform="translate(580, 320)">
     <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="1.5" />
     <text class="box-title" x="15" y="25">DaemonSet</text>
     <text class="box-desc" x="15" y="45">Per-node system agents</text>
@@ -184,44 +184,44 @@
     <text class="cond-text" x="182" y="38" fill="#2DD4BF">"DaemonSet"</text>
   </g>
 
-  <!-- 4. OPERATIONAL ADDONS LAYER -->
+  <!-- 4. OPERATIONAL ADDONS LAYER (Shifted Downwards) -->
   <!-- HorizontalPodAutoscaler -->
-  <g class="node-card" transform="translate(580, 390)">
+  <g class="node-card" transform="translate(580, 430)">
     <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
     <text class="box-title" x="15" y="22" font-size="12">HorizontalPodAutoscaler (HPA)</text>
     <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: autoscaling.enabled &amp;&amp; (Deployment || StatefulSet)</text>
   </g>
 
   <!-- PodDisruptionBudget -->
-  <g class="node-card" transform="translate(580, 455)">
+  <g class="node-card" transform="translate(580, 495)">
     <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
     <text class="box-title" x="15" y="22" font-size="12">PodDisruptionBudget (PDB)</text>
     <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: pdb.enabled</text>
   </g>
 
   <!-- NetworkPolicy -->
-  <g class="node-card" transform="translate(580, 520)">
+  <g class="node-card" transform="translate(580, 560)">
     <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
     <text class="box-title" x="15" y="22" font-size="12">NetworkPolicy</text>
     <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: networkPolicy.enabled</text>
   </g>
 
   <!-- Namespaced RBAC (Role & RoleBinding) -->
-  <g class="node-card" transform="translate(580, 585)">
+  <g class="node-card" transform="translate(580, 625)">
     <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
     <text class="box-title" x="15" y="22" font-size="12">Role &amp; RoleBinding</text>
     <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: size(rbac.rules) &gt; 0</text>
   </g>
 
   <!-- Cluster-wide RBAC (ClusterRole & ClusterRoleBinding) -->
-  <g class="node-card" transform="translate(580, 650)">
+  <g class="node-card" transform="translate(580, 690)">
     <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
     <text class="box-title" x="15" y="22" font-size="12">ClusterRole &amp; ClusterRoleBinding</text>
     <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: size(rbac.clusterRules) &gt; 0</text>
   </g>
 
-  <!-- Flow details connector info -->
-  <g transform="translate(40, 750)">
+  <!-- Flow details connector info (Moved Downward) -->
+  <g transform="translate(40, 790)">
     <text class="subtitle" x="0" y="0">• All resources are namespace-scoped to match the Compute CR, except ClusterRole/Binding (prefixed by namespace).</text>
     <text class="subtitle" x="0" y="16">• Deployment, StatefulSet, and DaemonSet share the exact same PodSpec definition resolved by the internal PodSpec RGD.</text>
   </g>
