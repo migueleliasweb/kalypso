@@ -105,8 +105,18 @@ spec:
           allowTo: '[]object | default=[] description="List of egress rules (podSelector, namespaceSelector, ipBlock, ports)"'
 
     status:
-      readyReplicas: '${deployment != null ? (has(deployment.status.readyReplicas) ? deployment.status.readyReplicas : 0) : (statefulSet != null ? (has(statefulSet.status.readyReplicas) ? statefulSet.status.readyReplicas : 0) : (daemonSet != null ? (has(daemonSet.status.numberReady) ? daemonSet.status.numberReady : 0) : 0))}'
-      replicas: '${deployment != null ? (has(deployment.status.replicas) ? deployment.status.replicas : 0) : (statefulSet != null ? (has(statefulSet.status.replicas) ? statefulSet.status.replicas : 0) : (daemonSet != null ? (has(daemonSet.status.desiredNumberScheduled) ? daemonSet.status.desiredNumberScheduled : 0) : 0))}'
+      deployment:
+        ready: '${deployment != null && has(deployment.status.readyReplicas) && deployment.status.readyReplicas == deployment.spec.replicas}'
+        readyReplicas: '${deployment != null && has(deployment.status.readyReplicas) ? deployment.status.readyReplicas : 0}'
+        desiredReplicas: '${deployment != null && has(deployment.spec.replicas) ? deployment.spec.replicas : 0}'
+      statefulSet:
+        ready: '${statefulSet != null && has(statefulSet.status.readyReplicas) && statefulSet.status.readyReplicas == statefulSet.spec.replicas}'
+        readyReplicas: '${statefulSet != null && has(statefulSet.status.readyReplicas) ? statefulSet.status.readyReplicas : 0}'
+        desiredReplicas: '${statefulSet != null && has(statefulSet.spec.replicas) ? statefulSet.spec.replicas : 0}'
+      daemonSet:
+        ready: '${daemonSet != null && has(daemonSet.status.numberReady) && daemonSet.status.numberReady == daemonSet.status.desiredNumberScheduled}'
+        readyReplicas: '${daemonSet != null && has(daemonSet.status.numberReady) ? daemonSet.status.numberReady : 0}'
+        desiredReplicas: '${daemonSet != null && has(daemonSet.status.desiredNumberScheduled) ? daemonSet.status.desiredNumberScheduled : 0}'
 
 
   resources:
