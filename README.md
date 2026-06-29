@@ -35,7 +35,7 @@ Kalypso abstracts multi-resource deployments by providing a simple, high-level d
 | RGD Name | Kind | API Version | Scope | Description |
 | --- | --- | --- | --- | --- |
 | **Core** | `Core` | `kalypso.lmoet.io/v1alpha2` | Namespaced | User-facing API for defining and running application workloads and associated operational addons. |
-| **PodSpec** | `PodSpec` | `kalypso.lmoet.io/v1alpha2` | Namespaced | *Internal* type chained by `Core` to resolve container environments, probes, resource bounds, and scheduling settings. |
+| **PodSpec** | `PodSpec` | `kalypso.lmoet.io/v1alpha1` | Namespaced | *Internal* type chained by `Core` to resolve container environments, probes, resource bounds, and scheduling settings. |
 
 ---
 

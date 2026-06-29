@@ -9,8 +9,8 @@ This folder contains design documents, guides, and specifications for the capabi
 ## Capabilities Overview
 
 The core capability implemented in `v1alpha2` is the **Core** capability, which is defined across two Resource Graph Definitions (RGDs):
-1. **Core RGD** ([core-rgd.yaml](../capabilities/core/v1alpha2/core-rgd.yaml)): The main user-facing Namespaced API that represents a logical application workload.
-2. **PodSpec RGD** ([podspec-rgd.yaml](../capabilities/core/v1alpha2/podspec-rgd.yaml)): An internal helper RGD chained by `Core` to resolve container specs, environment variables, mounts, and scheduling policies.
+1. **Core RGD** ([core-rgd.yaml](../capabilities/core/v1alpha2/core-rgd.yaml)): The main user-facing Namespaced API (`v1alpha2`) that represents a logical application workload.
+2. **PodSpec RGD** ([podspec-rgd.yaml](../capabilities/podspec/v1alpha1/podspec-rgd.yaml)): An internal helper RGD (`v1alpha1`) chained by `Core` to resolve container specs, environment variables, mounts, and scheduling policies.
 
 ---
 

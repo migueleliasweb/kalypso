@@ -124,7 +124,7 @@ spec:
     # --- Chained PodSpec instance
     - id: podSpec
       template:
-        apiVersion: kalypso.lmoet.io/v1alpha2
+        apiVersion: kalypso.lmoet.io/v1alpha1
         kind: PodSpec
         metadata:
           name: '${schema.metadata.name}'
