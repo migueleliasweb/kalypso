@@ -10,6 +10,16 @@ Kalypso provides platform engineers and developers with ready-to-use building bl
 
 ---
 
+## Installation
+
+You can install Kalyso's KRO RDGs present in `capabilities` directory by using the `kro apply` command:
+
+```bash
+kro apply -f capabilities/<version>/*
+```
+
+---
+
 ## How Kalypso Works
 
 Kalypso abstracts multi-resource deployments by providing a simple, high-level developer spec that automatically generates, binds, and manages a complete set of underlying Kubernetes resources.

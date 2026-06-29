@@ -1,0 +1,325 @@
+# Kalypso Core RGD Derived YAML Flow Graph
+# Shows generated YAML templates for: Core, PodSpec, ServiceAccount, ConfigMap, Secret, Deployment, StatefulSet, DaemonSet, HPA, PDB, NetworkPolicy, Role, ClusterRole
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 200
+  }
+}
+
+direction: right
+
+style.fill: "#0B0F19"
+
+classes: {
+  input-node: {
+    style: {
+      fill: "#312E81"
+      stroke: "#6366F1"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 10
+      bold: true
+    }
+  }
+
+  internal-node: {
+    style: {
+      fill: "#0F172A"
+      stroke: "#475569"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 12
+      bold: true
+    }
+  }
+
+  sub-resource-node: {
+    style: {
+      fill: "#1E293B"
+      stroke: "#64748B"
+      font-color: "#F1F5F9"
+      border-radius: 6
+    }
+  }
+
+  workload-node: {
+    style: {
+      fill: "#115E59"
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 10
+      bold: true
+    }
+  }
+
+  addon-node: {
+    style: {
+      fill: "#5B21B6"
+      stroke: "#8B5CF6"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 8
+      bold: true
+    }
+  }
+
+  blue-connector: {
+    style: {
+      stroke: "#38BDF8"
+      stroke-width: 2
+      font-color: "#38BDF8"
+      bold: true
+    }
+  }
+
+  teal-connector: {
+    style: {
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#0D9488"
+      bold: true
+    }
+  }
+
+  dashed-connector: {
+    style: {
+      stroke: "#475569"
+      stroke-width: 2
+      stroke-dash: 4
+      font-color: "#94A3B8"
+    }
+  }
+}
+
+# --- Title Header
+title: "Kalypso Core RGD: Schema & Instantiated Resources Map\n(Core, PodSpec, ServiceAccount, ConfigMap, Secret, Deployment, StatefulSet, DaemonSet, HPA, PDB, NetworkPolicy, Role, ClusterRole)" {
+  style: {
+    fill: transparent
+    stroke-width: 0
+    font-size: 18
+    font-color: "#F8FAFC"
+    bold: true
+  }
+}
+
+# --- 1. Core CR Input (Indigo)
+core_cr: "Core Custom Resource (Input)" {
+  class: input-node
+  yaml: |`yaml
+    apiVersion: kalypso.lmoet.io/v1alpha2
+    kind: Core
+    metadata:
+      name: my-app
+      namespace: default
+    spec:
+      computeType: Deployment
+      image: nginx:1.25
+      port: 80
+      pdb:
+        enabled: true
+        maxUnavailable: "1"
+      autoscaling:
+        enabled: false
+  `|
+}
+
+# --- 2. PodSpec RGD (Internal Slate)
+podspec_rgd: "PodSpec RGD (Chained Helper)" {
+  class: internal-node
+  yaml: |`yaml
+    apiVersion: kalypso.lmoet.io/v1alpha2
+    kind: PodSpec
+    metadata:
+      name: my-app
+    spec:
+      image: nginx:1.25
+      port: 80
+  `|
+}
+
+# --- 3. Derived Helper Sub-resources (Slate-medium)
+sa_resource: "ServiceAccount" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: my-app
+  `|
+}
+
+cm_resource: "ConfigMap" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: my-app
+    data: {}
+  `|
+}
+
+sec_resource: "Secret" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: my-app
+    stringData: {}
+  `|
+}
+
+# --- 4. Workloads (Teal)
+deployment_res: "Deployment" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        spec:
+          # Injected from PodSpec status:
+          serviceAccountName: my-app
+          containers:
+            - name: app
+              image: nginx:1.25
+              ports:
+                - containerPort: 80
+  `|
+}
+
+statefulset_res: "StatefulSet" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      serviceName: my-app
+      template:
+        spec:
+          # Injected from PodSpec status
+  `|
+}
+
+daemonset_res: "DaemonSet" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: my-app
+    spec:
+      template:
+        spec:
+          # Injected from PodSpec status
+  `|
+}
+
+# --- 5. Addons (Purple/Violet)
+hpa_res: "HorizontalPodAutoscaler" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: my-app
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: my-app
+  `|
+}
+
+pdb_res: "PodDisruptionBudget" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: my-app
+    spec:
+      maxUnavailable: 1
+  `|
+}
+
+netpol_res: "NetworkPolicy" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: my-app
+    spec:
+      podSelector:
+        matchLabels:
+          app: my-app
+  `|
+}
+
+rbac_res: "Role & Binding" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: my-app
+    rules: []
+  `|
+}
+
+crbac_res: "ClusterRole & Binding" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: default-my-app
+    rules: []
+  `|
+}
+
+# --- Connections representing instantiation flow
+core_cr -> podspec_rgd: "Delegates PodSpec fields" {
+  class: blue-connector
+}
+
+# Chained RGD helper resolution
+podspec_rgd -> sa_resource: "Creates if enabled" { class: dashed-connector }
+podspec_rgd -> cm_resource: "Creates if enabled" { class: dashed-connector }
+podspec_rgd -> sec_resource: "Creates if enabled" { class: dashed-connector }
+
+# Workloads derived from Chained PodSpec output status
+podspec_rgd -> deployment_res: "Injects resolved PodSpec" { class: teal-connector }
+podspec_rgd -> statefulset_res: "Injects resolved PodSpec" { class: teal-connector }
+podspec_rgd -> daemonset_res: "Injects resolved PodSpec" { class: teal-connector }
+
+# Top level CR conditional configurations
+core_cr -> hpa_res: "Generates if autoscaling.enabled" { class: dashed-connector }
+core_cr -> pdb_res: "Generates if pdb.enabled" { class: dashed-connector }
+core_cr -> netpol_res: "Generates if networkPolicy.enabled" { class: dashed-connector }
+core_cr -> rbac_res: "Generates if rbac.rules present" { class: dashed-connector }
+core_cr -> crbac_res: "Generates if rbac.clusterRules present" { class: dashed-connector }
+
+# Notes positioned at the bottom
+notes: "• PodSpec is a helper RGD that resolves service accounts, environment config, secrets, and probes.\n• Compute workloads (Deployment, StatefulSet, DaemonSet) are mutually exclusive based on computeType.\n• All resources inherit the name and namespacing of the parent Core CR." {
+  style: {
+    fill: transparent
+    stroke-width: 0
+    font-size: 11
+    font-color: "#94A3B8"
+  }
+}

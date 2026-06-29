@@ -16,9 +16,11 @@ The core capability implemented in `v1alpha2` is the **Core** capability, which 
 
 ## Architectural Flow
 
+# Core RGD
+
 The following diagram illustrates how a single `Core` Custom Resource is processed by KRO to automatically generate various standard Kubernetes resources based on your specification.
 
-![Core Flow Diagram](images/core-flow.svg)
+![Core Flow Diagram](images/core-flow2.svg)
 
 ---
 

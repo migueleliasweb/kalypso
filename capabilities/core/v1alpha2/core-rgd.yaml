@@ -10,7 +10,7 @@ spec:
     scope: Namespaced
 
     spec:
-      computeType: string | default="Deployment" enum="Deployment,StatefulSet,DaemonSet" description="The type of workload to run"
+      computeType: string | default="Deployment" enum="Deployment,StatefulSet,DaemonSet" description="The type of compute to run"
       replicas: integer | default=1 minimum=1 description="Number of desired replicas (only for Deployment/StatefulSet)"
 
       # --- Delegate Container/Pod specification fields to PodSpec CRD
