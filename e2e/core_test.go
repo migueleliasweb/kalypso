@@ -229,3 +229,39 @@ func TestCoreNetworkPolicy(t *testing.T) {
 
 	testenv.Test(t, feat)
 }
+
+func TestCoreRBACDisabled(t *testing.T) {
+	const name = "core-rbac-disabled"
+
+	feat := features.New("core/rbac-disabled").
+		Setup(applyNamespaced("testdata/core-rbac-disabled.yaml")).
+		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
+		Assess("serviceaccount present", assertExists(
+			serviceAccountGVK,
+			testNamespace,
+			name,
+		)).
+		Assess("role absent", assertAbsent(
+			roleGVK,
+			testNamespace,
+			name,
+		)).
+		Assess("rolebinding absent", assertAbsent(
+			roleBindingGVK,
+			testNamespace,
+			name,
+		)).
+		Assess("clusterrole absent", assertAbsent(
+			clusterRoleGVK,
+			"", // Cluster-scoped
+			testNamespace+"-"+name,
+		)).
+		Assess("clusterrolebinding absent", assertAbsent(
+			clusterRoleBindingGVK,
+			"", // Cluster-scoped
+			testNamespace+"-"+name,
+		)).
+		Feature()
+
+	testenv.Test(t, feat)
+}

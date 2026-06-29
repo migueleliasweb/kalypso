@@ -93,6 +93,7 @@ spec:
 
       # --- RBAC Support
       rbac:
+        enabled: boolean | default=false description="Whether to enable RBAC resources creation"
         rules: '[]object | default=[] description="Optional namespaced RBAC rules (creates Role & RoleBinding)"'
         clusterRules: '[]object | default=[] description="Optional cluster-wide RBAC rules (creates ClusterRole & ClusterRoleBinding)"'
 
@@ -264,7 +265,7 @@ spec:
     # --- Namespaced RBAC Role (conditional)
     - id: role
       includeWhen:
-        - '${has(schema.spec.rbac) && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.enabled) && schema.spec.rbac.enabled && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
       template:
         apiVersion: rbac.authorization.k8s.io/v1
         kind: Role
@@ -275,7 +276,7 @@ spec:
     # --- Namespaced RBAC RoleBinding (conditional)
     - id: roleBinding
       includeWhen:
-        - '${has(schema.spec.rbac) && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.enabled) && schema.spec.rbac.enabled && has(schema.spec.rbac.rules) && size(schema.spec.rbac.rules) > 0}'
       template:
         apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
@@ -293,7 +294,7 @@ spec:
     # --- Cluster RBAC ClusterRole (conditional)
     - id: clusterRole
       includeWhen:
-        - '${has(schema.spec.rbac) && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.enabled) && schema.spec.rbac.enabled && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
       template:
         apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRole
@@ -304,7 +305,7 @@ spec:
     # --- Cluster RBAC ClusterRoleBinding (conditional)
     - id: clusterRoleBinding
       includeWhen:
-        - '${has(schema.spec.rbac) && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
+        - '${has(schema.spec.rbac) && has(schema.spec.rbac.enabled) && schema.spec.rbac.enabled && has(schema.spec.rbac.clusterRules) && size(schema.spec.rbac.clusterRules) > 0}'
       template:
         apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRoleBinding

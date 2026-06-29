@@ -47,7 +47,9 @@ Below is a detailed reference of the schema fields defined in the `Core` spec.
 | `pdb.maxUnavailable` | `string` | `"1"` | Max unavailable pods. Can be integer or percentage string. |
 | `autoscaling.enabled` | `boolean` | `false` | Enforce HPA for autoscaling. |
 | `volumeClaimTemplates` | `[]object` | `[]` | PVC templates (for StatefulSet workloads). |
+| `rbac.enabled` | `boolean` | `false` | Whether to enable RBAC resources creation. |
 | `rbac` | `object` | `{}` | Namespaced rules and cluster rules list. |
+| `networkPolicy.enabled` | `boolean` | `false` | Whether to enable NetworkPolicy creation for this workload. |
 | `networkPolicy` | `object` | `{}` | Ingress/Egress traffic network policies. |
 
 ---
@@ -168,6 +170,7 @@ spec:
   serviceAccount:
     create: true
   rbac:
+    enabled: true
     rules:
       - apiGroups: [""]
         resources: ["namespaces"]

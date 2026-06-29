@@ -1,13 +1,13 @@
 apiVersion: kalypso.lmoet.io/v1alpha2
 kind: Core
 metadata:
-  name: core-rbac
+  name: core-rbac-disabled
 spec:
   image: gcr.io/google-samples/hello-app:1.0
   serviceAccount:
     create: true
   rbac:
-    enabled: true
+    enabled: false
     rules:
       - apiGroups: [""]
         resources: ["configmaps"]
