@@ -9,8 +9,8 @@ This folder contains design documents, guides, and specifications for the capabi
 ## Capabilities Overview
 
 The core capability implemented in `v1alpha2` is the **Compute** capability, which is defined across two Resource Graph Definitions (RGDs):
-1. **Compute RGD** ([compute-rgd.yaml](file:///Users/miguel.santos/Projects/personal/kalypso/capabilities/compute/v1alpha2/compute-rgd.yaml)): The main user-facing Namespaced API that represents a logical application workload.
-2. **PodSpec RGD** ([podspec-rgd.yaml](file:///Users/miguel.santos/Projects/personal/kalypso/capabilities/compute/v1alpha2/podspec-rgd.yaml)): An internal helper RGD chained by `Compute` to resolve container specs, environment variables, mounts, and scheduling policies.
+1. **Compute RGD** ([compute-rgd.yaml](./capabilities/compute/v1alpha2/compute-rgd.yaml)): The main user-facing Namespaced API that represents a logical application workload.
+2. **PodSpec RGD** ([podspec-rgd.yaml](./capabilities/compute/v1alpha2/podspec-rgd.yaml)): An internal helper RGD chained by `Compute` to resolve container specs, environment variables, mounts, and scheduling policies.
 
 ---
 

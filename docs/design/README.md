@@ -87,18 +87,18 @@ When creating a new release, copy all RGDs from the previous release and start w
 
 ### Release V1Alpha1
 
-The V1Alpha1 release will provide support for the Compute caopability. The goal of the V1Alpha1 release is to provide a solid foundation for future development and to demonstrate the value of `Kalypso`.
+The V1Alpha1 release will provide support for the Core capability. The goal of the V1Alpha1 release is to provide a solid foundation for future development and to demonstrate the value of `Kalypso`.
 
 A test harness to allow quick iteration on the CRDs and RGDs provided by `Kalypso` using the Kubernetes e2e framework + KinD.
 
 ### Release V1Alpha2
 
-The V1Alpha2 release will provide support for other (core) compute-related Kubernetes components as Kalypso building blocks. E.g. RBAC, Network Policy. 
+The V1Alpha2 release will provide full support for other Core Kubernetes resources as Kalypso capabilities. E.g. RBAC, Network Policy. 
 
 ### Release V1Alpha3
 
-The V1Alpha3 release will provide support for Networking-related Kubernetes components and initial integration with Istio and GatewayAPI related capabilities as Kalypso building blocks.
+The V1Alpha3 release will provide support for Networking-related integrations. I.e. Istio and GatewayAPI related capabilities as Kalypso capabilities.
 
 ### Release V1Alpha4
 
-The V1Alpha4 release will provide support for Observability-related Kubernetes components and initial integration with Prometheus-related capabilities as Kalypso building blocks.
+The V1Alpha4 release will provide support for Observability-related integrations. I.e. Prometheus as Kalypso capabilities.

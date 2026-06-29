@@ -14,7 +14,7 @@ Ignore all files in ./hack.
 
 ## Knowledge Base
 
-Refer to [KALYPSO_KNOWLEDGE.md](file:///Users/miguel.santos/Projects/personal/kalypso/KALYPSO_KNOWLEDGE.md) for compiled knowledge about KRO RGDs and Kalypso architecture.
+Refer to [KALYPSO_KNOWLEDGE.md](./KALYPSO_KNOWLEDGE.md) for compiled knowledge about KRO RGDs and Kalypso architecture.
 
 ## KRO CLI
 
