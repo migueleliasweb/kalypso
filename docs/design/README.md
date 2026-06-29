@@ -77,6 +77,35 @@ resources:
         namespace: <namespace> # E.g "configmap-namespace"
 ```
 
+### CRD Status reporting
+
+Each `Kalypso` CRDs defined via `KRO`, will provide a `status` block to report its status and the status of its dependencies. We must leverage this information to provide a unified status for the `Workload` CRD.
+
+Each status will be aggregated by the child's type. E.g:
+
+```yaml
+status:
+  core:
+    ready: true
+  networking:
+    ready: true
+  observability: 
+    ready: true
+  # etc...
+```
+
+For the capabilities, status will be reported off the lower level Kubernetes types:
+
+```yaml
+# Core type status
+status:
+  deployment:
+    ready: true
+    readyReplicas: <n>
+    desiredReplicas: <n>
+  # etc...
+```
+
 ## Kalypso CLI (TBD)
 
 The Kalypso CLI is planned to provide higher-level features to manage validate and explore different capabilities provided by `Kalypso`.

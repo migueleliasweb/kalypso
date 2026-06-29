@@ -60,23 +60,6 @@ To support only one of Deployment, StatefulSet, or DaemonSet at a time, each res
 - **StatefulSet**: `${schema.spec.computeType == "StatefulSet"}`
 - **DaemonSet**: `${schema.spec.computeType == "DaemonSet"}`
 
-### Status reporting
-
-Each `Kalypso` CRDs defined via `KRO`, will provide a `status` block to report its status and the status of its dependencies. We must leverage this information to provide a unified status for the `Workload` CRD.
-
-Each status will be aggregated by the child's type. E.g:
-
-```yaml
-status:
-  core:
-    ready: true
-  networking:
-    ready: true
-  observability: 
-    ready: true
-  # etc...
-```
-
 ### Conditional Status Mapping
 
 To safely reference resource statuses when some resources might be excluded:
