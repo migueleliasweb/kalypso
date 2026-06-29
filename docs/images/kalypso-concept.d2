@@ -1,19 +1,52 @@
 # Kalypso - High-Level Conceptual Diagram
 # Written in D2 (https://d2lang.com)
+vars: {
+  d2-config: {
+    layout-engine: elk
+    # Terminal theme code
+    theme-id: 300
+  }
+}
+
+style.fill: transparent
+
+classes: {
+  purple-box: {
+    style: {
+      fill: "#4F46E5"
+      stroke: "#8B5CF6"
+      font-color: "#FFFFFF"
+      border-radius: 12
+      bold: true
+    }
+  }
+  main-box: {
+    style: {
+      # fill: "#a9a9a9"
+      fill-pattern: none
+      stroke: "#334155"
+      border-radius: 8
+      font-color: "#FFFFFF"
+      bold: true
+      stroke-width: 0
+      font-color: "#6f6f6f"
+    }
+  }
+  connector: {
+    style: {
+      stroke: "#4F46E5"
+      font-color: "#6366F1"
+      stroke-dash: 5
+    }
+  }
+}
 
 direction: right
 
-# Canvas styling (corresponds to SVG background)
-style.fill: "#0B0F19"
+kalypso-crd: "Kalypso CRD" {
+  class: main-box
 
-developer: "1. Developer Intent (Single CR)" {
-  style.fill: "#1E293B"
-  style.stroke: "#334155"
-  style.border-radius: 8
-  style.font-color: "#FFFFFF"
-  style.bold: true
-
-  compute: |`yaml
+  spec: |`yaml
     apiVersion: kalypso.lmoet.io/v1alpha2
     kind: Compute
     metadata:
@@ -28,93 +61,78 @@ developer: "1. Developer Intent (Single CR)" {
         enabled: true
       rbac: {rules: [...]}
   `| {
-    style.fill: "#0B0F19"
+    style: {
+      fill: "#0B0F19"
+      stroke-width: 0
+    }
   }
 }
 
-engine: "KALYPSO\nRGD ENGINE\n(KRO Runtime)" {
-  shape: oval
-  style.fill: "#8B5CF6"
-  style.stroke: "#4F46E5"
-  style.font-color: "#FFFFFF"
-  style.font-size: 12
-  style.bold: true
+kro-runtime: "KRO RUNTIME" {
+  class: purple-box
 }
 
-generated: "2. Generated Kubernetes Resources" {
-  style.fill: "#0F172A"
-  style.stroke: "#1E293B"
-  style.border-radius: 8
-  style.font-color: "#FFFFFF"
-  style.bold: true
+generated: "Generated \nKubernetes Resources" {
+  class: main-box
 
-  core: "Workload & Scaling" {
+  grid-rows: 4
+
+  deployment: "Deployment" {
     style.fill: "#0B0F19"
-    style.stroke: "#1E293B"
-    style.font-color: "#94A3B8"
+    style.stroke: "#0D9488"
+    style.font-color: "#2DD4BF"
     style.bold: true
-    
-    deployment: "Deployment" {
-      style.fill: "#0F172A"
-      style.stroke: "#0D9488"
-      style.font-color: "#2DD4BF"
-      style.bold: true
-    }
-    sa: "ServiceAccount" {
-      style.fill: "#0F172A"
-      style.stroke: "#3B82F6"
-      style.font-color: "#93C5FD"
-      style.bold: true
-    }
-    hpa: "HPA v2" {
-      style.fill: "#0F172A"
-      style.stroke: "#8B5CF6"
-      style.font-color: "#C084FC"
-      style.bold: true
-    }
-    pdb: "PodDisruptionBudget" {
-      style.fill: "#0F172A"
-      style.stroke: "#8B5CF6"
-      style.font-color: "#C084FC"
-      style.bold: true
-    }
   }
-
-  security: "Security & Config" {
+  sa: "ServiceAccount" {
     style.fill: "#0B0F19"
-    style.stroke: "#1E293B"
-    style.font-color: "#94A3B8"
+    style.stroke: "#3B82F6"
+    style.font-color: "#93C5FD"
     style.bold: true
-
-    netpol: "NetworkPolicy" {
-      style.fill: "#0F172A"
-      style.stroke: "#EF4444"
-      style.font-color: "#FCA5A5"
-      style.bold: true
-    }
-    rbac: "Role & Binding" {
-      style.fill: "#0F172A"
-      style.stroke: "#F59E0B"
-      style.font-color: "#FDE047"
-      style.bold: true
-    }
-    config: "ConfigMaps / Secrets" {
-      style.fill: "#0F172A"
-      style.stroke: "#64748B"
-      style.font-color: "#CBD5E1"
-      style.bold: true
-    }
+  }
+  hpa: "HPA v2" {
+    style.fill: "#0B0F19"
+    style.stroke: "#8B5CF6"
+    style.font-color: "#C084FC"
+    style.bold: true
+  }
+  pdb: "PodDisruption" {
+    style.fill: "#0B0F19"
+    style.stroke: "#8B5CF6"
+    style.font-color: "#C084FC"
+    style.bold: true
+  }
+  netpol: "NetworkPolicy" {
+    style.fill: "#0B0F19"
+    style.stroke: "#EF4444"
+    style.font-color: "#FCA5A5"
+    style.bold: true
+  }
+  rbac: "Role & Binding" {
+    style.fill: "#0B0F19"
+    style.stroke: "#F59E0B"
+    style.font-color: "#FDE047"
+    style.bold: true
+  }
+  config: "ConfigMaps / Secrets" {
+    style.fill: "#0B0F19"
+    style.stroke: "#64748B"
+    style.font-color: "#CBD5E1"
+    style.bold: true
   }
 }
 
-# Connectors
-developer.compute -> engine: "Declares Spec" {
-  style.stroke: "#4F46E5"
-  style.font-color: "#6366F1"
-  style.stroke-dash: 5
+user: "User" {
+  class: purple-box
 }
 
-engine -> generated: "Generates" {
-  style.stroke: "#4F46E5"
-  style.font-color: "#6366F1"
+user -> kalypso-crd: "Applies" {
+  class: connector
+}
+
+kalypso-crd <- kro-runtime: "Watches" {
+  class: connector
+}
+
+kro-runtime -> generated: "Generates" {
+  class: connector
 }
