@@ -26,31 +26,8 @@ The following diagram illustrates how a single `Core` Custom Resource is process
 
 ## API Schema Reference
 
-Below is a detailed reference of the schema fields defined in the `Core` spec.
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `computeType` | `string` | `"Deployment"` | The type of workload to run. Allowed values: `Deployment`, `StatefulSet`, `DaemonSet`. |
-| `replicas` | `integer` | `1` | Number of replicas to run (applicable to `Deployment` and `StatefulSet` only). |
-| `image` | `string` | *Required* | Container image to run. |
-| `port` | `integer` | `8080` | Container port that the application listens on. |
-| `command` | `[]string` | `[]` | Entrypoint array. |
-| `args` | `[]string` | `[]` | Arguments to the entrypoint. |
-| `env` | `[]object` | `[]` | Environment variables list (standard EnvVar schema). |
-| `resources` | `object` | Requests: `cpu: 200m`, `memory: 128Mi` | Resource CPU/Memory requests and limits. |
-| `probes` | `object` | Liveness/Readiness enabled | Health checking probes configurations (Liveness, Readiness, Startup). |
-| `serviceAccount.create` | `boolean` | `true` | Whether to create a dedicated ServiceAccount. |
-| `serviceAccount.name` | `string` | `""` | Dedicated ServiceAccount override name. |
-| `configMap.enabled` | `boolean` | `false` | When true, creates a ConfigMap populated with `configMap.data` and mounts it via `envFrom`. |
-| `secret.enabled` | `boolean` | `false` | When true, creates a Secret populated with `secret.data` and mounts it via `envFrom`. |
-| `pdb.enabled` | `boolean` | `true` | Creates a PodDisruptionBudget. |
-| `pdb.maxUnavailable` | `string` | `"1"` | Max unavailable pods. Can be integer or percentage string. |
-| `autoscaling.enabled` | `boolean` | `false` | Enforce HPA for autoscaling. |
-| `volumeClaimTemplates` | `[]object` | `[]` | PVC templates (for StatefulSet workloads). |
-| `rbac.enabled` | `boolean` | `false` | Whether to enable RBAC resources creation. |
-| `rbac` | `object` | `{}` | Namespaced rules and cluster rules list. |
-| `networkPolicy.enabled` | `boolean` | `false` | Whether to enable NetworkPolicy creation for this workload. |
-| `networkPolicy` | `object` | `{}` | Ingress/Egress traffic network policies. |
+- [Core v1alpha2](gen/core-v1alpha2.md)
+- [PodSpec v1alpha1](gen/podspec-v1alpha1.md)
 
 ---
 
