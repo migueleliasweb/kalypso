@@ -1,6 +1,3 @@
-# Kalypso Core capability flow diagram
-# Written in D2 (https://d2lang.com)
-
 vars: {
   d2-config: {
     layout-engine: elk
@@ -24,7 +21,7 @@ classes: {
     }
   }
 
-  internal-container: {
+  internal-node: {
     style: {
       fill: "#0F172A"
       stroke: "#475569"
@@ -35,7 +32,7 @@ classes: {
     }
   }
 
-  internal-node: {
+  sub-resource-node: {
     style: {
       fill: "#1E293B"
       stroke: "#64748B"
@@ -44,43 +41,13 @@ classes: {
     }
   }
 
-  podtemplate-node: {
-    style: {
-      fill: "#1E1B4B"
-      stroke: "#818CF8"
-      stroke-width: 2
-      font-color: "#A5B4FC"
-      border-radius: 6
-    }
-  }
-
-  workload-container: {
-    style: {
-      fill: "#042F2E"
-      stroke: "#0D9488"
-      stroke-width: 2
-      font-color: "#F8FAFC"
-      border-radius: 12
-      bold: true
-    }
-  }
-
   workload-node: {
     style: {
       fill: "#115E59"
       stroke: "#0D9488"
-      font-color: "#F1F5F9"
-      border-radius: 6
-    }
-  }
-
-  addon-container: {
-    style: {
-      fill: "#2E1065"
-      stroke: "#8B5CF6"
       stroke-width: 2
       font-color: "#F8FAFC"
-      border-radius: 12
+      border-radius: 10
       bold: true
     }
   }
@@ -89,8 +56,10 @@ classes: {
     style: {
       fill: "#5B21B6"
       stroke: "#8B5CF6"
-      font-color: "#F1F5F9"
-      border-radius: 6
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 8
+      bold: true
     }
   }
 
@@ -122,109 +91,205 @@ classes: {
   }
 }
 
-# Root Title Node (flat node positioned nicely)
-title: "Kalypso Core RGD Flow Graph\nResource instantiation tree and conditional dependencies in v1alpha2" {
-  style: {
-    fill: transparent
-    stroke-width: 0
-    font-size: 18
-    font-color: "#F8FAFC"
-    bold: true
-  }
-}
-
-core_cr: "Core CR\n(kalypso.lmoet.io/v1alpha2)" {
+# --- 1. Core CR Input (Indigo)
+core_cr: "Core Custom Resource (Input)" {
   class: input-node
-  spec: |`yaml
+  yaml: |`yaml
+    apiVersion: kalypso.lmoet.io/v1alpha2
     kind: Core
+    metadata:
+      name: my-app
+      namespace: default
     spec:
-      workloadType: Deployment|StatefulSet|DaemonSet
-      image: string
-      port: int
-      # ...
+      computeType: Deployment
+      image: nginx:1.25
+      port: 80
+      pdb:
+        enabled: true
+        maxUnavailable: "1"
+      autoscaling:
+        enabled: false
   `|
 }
 
-podspec_rgd: "PodSpec RGD (Chained)\nInternal resource mapping" {
-  class: internal-container
-  grid-columns: 1
-
-  sa: "ServiceAccount\nincludeWhen: serviceAccount.create" {
-    class: internal-node
-  }
-  cm: "ConfigMap\nincludeWhen: configMap.enabled" {
-    class: internal-node
-  }
-  sec: "Secret\nincludeWhen: secret.enabled" {
-    class: internal-node
-  }
-  pt: "PodTemplate (Internal)\nResolves container specs, probes, mounts, env, scheduling" {
-    class: podtemplate-node
-  }
+# --- 2. PodSpec RGD (Internal Slate)
+podspec_rgd: "PodSpec RGD (Chained)" {
+  class: internal-node
+  yaml: |`yaml
+    apiVersion: kalypso.lmoet.io/v1alpha2
+    kind: PodSpec
+    metadata:
+      name: my-app
+    spec:
+      image: nginx:1.25
+      port: 80
+  `|
 }
 
-workloads: "Compute Type (Exclusive workloads)" {
-  class: workload-container
-  grid-columns: 1
-
-  dep: "Deployment\nStandard stateless workloads\n(workloadType == 'Deployment')" {
-    class: workload-node
-  }
-  ss: "StatefulSet\nStateful workloads with PVCs\n(workloadType == 'StatefulSet')" {
-    class: workload-node
-  }
-  ds: "DaemonSet\nPer-node system agents\n(workloadType == 'DaemonSet')" {
-    class: workload-node
-  }
+# --- 3. Derived Helper Sub-resources (Slate-medium)
+sa_resource: "ServiceAccount" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: my-app
+  `|
 }
 
-addons: "(Conditional Addons)" {
-  class: addon-container
-  grid-columns: 1
-
-  hpa: "HorizontalPodAutoscaler (HPA)\nincludeWhen: autoscaling.enabled && (Deployment || StatefulSet)" {
-    class: addon-node
-  }
-  pdb: "PodDisruptionBudget (PDB)\nincludeWhen: pdb.enabled" {
-    class: addon-node
-  }
-  netpol: "NetworkPolicy\nincludeWhen: networkPolicy.enabled" {
-    class: addon-node
-  }
-  role: "Role & RoleBinding\nincludeWhen: size(rbac.rules) > 0" {
-    class: addon-node
-  }
-  crole: "ClusterRole & ClusterRoleBinding\nincludeWhen: size(rbac.clusterRules) > 0" {
-    class: addon-node
-  }
+cm_resource: "ConfigMap" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: my-app
+    data: {}
+  `|
 }
 
-# Main Connections
-core_cr -> podspec_rgd: "Chains to" {
+sec_resource: "Secret" {
+  class: sub-resource-node
+  yaml: |`yaml
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: my-app
+    stringData: {}
+  `|
+}
+
+# --- 4. Workloads (Teal)
+deployment_res: "Deployment" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: my-app
+      template:
+        spec:
+          # Derived from PodSpec RGD:
+  `|
+}
+
+statefulset_res: "StatefulSet" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: my-app
+    spec:
+      replicas: 1
+      serviceName: my-app
+      template:
+        spec:
+          # Derived from PodSpec RGD
+  `|
+}
+
+daemonset_res: "DaemonSet" {
+  class: workload-node
+  yaml: |`yaml
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: my-app
+    spec:
+      template:
+        spec:
+          # Derived from PodSpec RGD
+  `|
+}
+
+# --- 5. Addons (Purple/Violet)
+hpa_res: "HorizontalPodAutoscaler" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    metadata:
+      name: my-app
+    spec:
+      scaleTargetRef:
+        apiVersion: apps/v1
+        kind: Deployment
+        name: my-app
+  `|
+}
+
+pdb_res: "PodDisruptionBudget" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: policy/v1
+    kind: PodDisruptionBudget
+    metadata:
+      name: my-app
+    spec:
+      maxUnavailable: 1
+  `|
+}
+
+netpol_res: "NetworkPolicy" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: my-app
+    spec:
+      podSelector:
+        matchLabels:
+          app: my-app
+  `|
+}
+
+rbac_res: "Roles & Bindings" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: my-app
+    rules: []
+  `|
+}
+
+crbac_res: "ClusterRoles & Bindings" {
+  class: addon-node
+  yaml: |`yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: default-my-app
+    rules: []
+  `|
+}
+
+# --- Connections representing instantiation flow
+core_cr -> podspec_rgd: "Delegates PodSpec fields" {
   class: blue-connector
 }
 
-podspec_rgd.pt -> workloads: "Injects PodSpec" {
-  class: teal-connector
-}
+# Chained RGD helper resolution
+podspec_rgd -> sa_resource: "Creates if enabled" {class: dashed-connector}
+podspec_rgd -> cm_resource: "Creates if enabled" {class: dashed-connector}
+podspec_rgd -> sec_resource: "Creates if enabled" {class: dashed-connector}
 
-core_cr -> workloads: "Selects workloadType" {
-  class: dashed-connector
-}
+# Workloads derived from Chained PodSpec output status
+podspec_rgd -> deployment_res: "Injects resolved PodSpec" {class: teal-connector}
+podspec_rgd -> statefulset_res: "Injects resolved PodSpec" {class: teal-connector}
+podspec_rgd -> daemonset_res: "Injects resolved PodSpec" {class: teal-connector}
 
-core_cr -> addons: "Conditionally enables" {
-  class: dashed-connector
-}
-
-# Notes (positioned at the bottom)
-notes: "• All resources are namespace-scoped to match the Core CR, except ClusterRole/Binding (prefixed by namespace).\n• Deployment, StatefulSet, and DaemonSet share the exact same PodSpec definition resolved by the internal PodSpec RGD." {
-  style: {
-    fill: transparent
-    stroke-width: 0
-    font-size: 11
-    font-color: "#94A3B8"
-  }
-}
-
-
-
+# Top level CR conditional configurations
+core_cr -> hpa_res: "If autoscaling.enabled" {class: dashed-connector}
+core_cr -> pdb_res: "If pdb.enabled" {class: dashed-connector}
+core_cr -> netpol_res: "If networkPolicy.enabled" {class: dashed-connector}
+core_cr -> rbac_res: "If rbac.rules present" {class: dashed-connector}
+core_cr -> crbac_res: "If rbac.clusterRules present" {class: dashed-connector}
