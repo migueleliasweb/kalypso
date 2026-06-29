@@ -14,7 +14,7 @@ Kalypso provides platform engineers and developers with ready-to-use building bl
 
 Kalypso abstracts multi-resource deployments by providing a simple, high-level developer spec that automatically generates, binds, and manages a complete set of underlying Kubernetes resources.
 
-![Kalypso Concept Diagram](docs/images/kalypso-concept.svg)
+![Kalypso Concept Diagram](docs/images/kalypso-concept-d2.svg)
 
 ---
 

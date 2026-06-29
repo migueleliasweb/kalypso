@@ -22,38 +22,6 @@ The following diagram illustrates how a single `Core` Custom Resource is process
 
 ---
 
-## Feature Details
-
-### 1. Workload Types (Exclusive)
-Based on `spec.workloadType`, the `Core` capability creates one (and only one) of the following core workload controllers:
-* **Deployment**: Used for stateless services (Default).
-* **StatefulSet**: Used for stateful applications. Mounts persistent volumes using `spec.volumeClaimTemplates`.
-* **DaemonSet**: Runs a pod replica on every matching node in the cluster.
-
-### 2. Autoscaling (HPA)
-When `spec.autoscaling.enabled` is set to `true`, Kalypso automatically creates a `HorizontalPodAutoscaler` (HPA v2) targeting the Deployment or StatefulSet.
-* **Fields**: `minReplicas`, `maxReplicas`, and `targetCPUUtilization`.
-
-### 3. Pod Disruption Budget (PDB)
-PDBs are enabled by default (`spec.pdb.enabled: true`) with `maxUnavailable` set to `1`.
-* **CEL Dynamic Type-Casting**: Supports both raw integers (e.g., `2`) and percentage strings (e.g., `"50%"`). Under the hood, KRO uses CEL expression logic to evaluate the type dynamically.
-
-### 4. Role-Based Access Control (RBAC)
-Easily grant permissions to the workload's pod:
-* **Namespaced RBAC**: Creates a `Role` and `RoleBinding` bound to the generated `ServiceAccount` based on rules in `spec.rbac.rules`.
-* **Cluster RBAC**: Creates a `ClusterRole` and `ClusterRoleBinding` (prefixed with the namespace name to avoid collision) based on rules in `spec.rbac.clusterRules`.
-
-### 5. Network Security Policies
-Secure traffic to and from the pods by setting `spec.networkPolicy.enabled: true`.
-* **Ingress**: Restrict incoming traffic using `ingress.allowFrom` rules.
-* **Egress**: Restrict outgoing traffic using `egress.allowTo` rules.
-
-### 6. Scheduling & High Availability
-* **Topology Spread Constraints**: Automatically enabled by default to spread replicas across hostnames (`kubernetes.io/hostname`) with a max skew of `1`. You can customize this or add additional constraints using `spec.scheduling.topologySpread.customConstraints`.
-* **Affinity & Tolerations**: Set standard Kubernetes node affinity, pod affinity/anti-affinity, and tolerations.
-
----
-
 ## API Schema Reference
 
 Below is a detailed reference of the schema fields defined in the `Core` spec.
