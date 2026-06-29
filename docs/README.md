@@ -8,9 +8,9 @@ This folder contains design documents, guides, and specifications for the capabi
 
 ## Capabilities Overview
 
-The core capability implemented in `v1alpha2` is the **Compute** capability, which is defined across two Resource Graph Definitions (RGDs):
-1. **Compute RGD** ([compute-rgd.yaml](./capabilities/compute/v1alpha2/compute-rgd.yaml)): The main user-facing Namespaced API that represents a logical application workload.
-2. **PodSpec RGD** ([podspec-rgd.yaml](./capabilities/compute/v1alpha2/podspec-rgd.yaml)): An internal helper RGD chained by `Compute` to resolve container specs, environment variables, mounts, and scheduling policies.
+The core capability implemented in `v1alpha2` is the **Core** capability, which is defined across two Resource Graph Definitions (RGDs):
+1. **Core RGD** ([core-rgd.yaml](../capabilities/core/v1alpha2/core-rgd.yaml)): The main user-facing Namespaced API that represents a logical application workload.
+2. **PodSpec RGD** ([podspec-rgd.yaml](../capabilities/core/v1alpha2/podspec-rgd.yaml)): An internal helper RGD chained by `Core` to resolve container specs, environment variables, mounts, and scheduling policies.
 
 ---
 
@@ -18,7 +18,7 @@ The core capability implemented in `v1alpha2` is the **Compute** capability, whi
 
 The following diagram illustrates how a single `Core` Custom Resource is processed by KRO to automatically generate various standard Kubernetes resources based on your specification.
 
-![Core Flow Diagram](images/Core-flow.svg)
+![Core Flow Diagram](images/core-flow.svg)
 
 ---
 
@@ -89,7 +89,7 @@ A simple HTTP hello application with default liveness and readiness probes.
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: hello-minimal
   namespace: default
@@ -103,7 +103,7 @@ Features customized resources, environment variables, environment variable bindi
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: app-production
   namespace: default
@@ -147,7 +147,7 @@ Demonstrates defining a stateful workload running 2 replicas with standard volum
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: database-stateful
   namespace: default
@@ -171,7 +171,7 @@ Runs a lightweight agent on all nodes.
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: logging-agent
   namespace: kube-system
@@ -188,7 +188,7 @@ Allows the application pod to inspect namespaces and read nodes.
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: Cluster-watcher
   namespace: monitoring
@@ -213,7 +213,7 @@ Restricts ingress traffic to only allow connections from pods with label `role: 
 
 ```yaml
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
   name: backend-secure
   namespace: default

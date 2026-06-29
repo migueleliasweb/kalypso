@@ -1,6 +1,6 @@
 # Kalypso
 
-This document outlines the design and implementation plan for the **Kalypso** project. Kalypso simplifies Kubernetes cluster and workload management by introducing high-level, opinionated Custom Resource Definitions (CRDs) for common capabilities (Compute, Storage, Networking, Observability, and Security), which are aggregated under a cluster-scoped `Workload` CRD.
+This document outlines the design and implementation plan for the **Kalypso** project. Kalypso simplifies Kubernetes cluster and workload management by introducing high-level, opinionated Custom Resource Definitions (CRDs) for common capabilities (Core, Storage, Networking, Observability, and Security), which are aggregated under a cluster-scoped `Workload` CRD.
 
 ## KRO - Kubernets Resource Operator
 
@@ -38,7 +38,7 @@ KRO is a generic operator that can be used to manage Kubernetes resources. KRO i
 
 ### Planned capabilities 
 
-- Compute: CRD responsible for defining compute-related resources
+- Core: CRD responsible for defining core workload-related resources
     - Autoscaling (HPA / KEDA)
     - Scheduling (Node Selector/Topology Spread Contraints/Affinity/Anti-Affinity)
     - Pod Disruption Budgets

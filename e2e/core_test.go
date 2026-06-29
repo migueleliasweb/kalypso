@@ -16,7 +16,7 @@ var (
 	daemonSetGVK           = schema.GroupVersionKind{Group: "apps", Version: "v1", Kind: "DaemonSet"}
 	hpaGVK                 = schema.GroupVersionKind{Group: "autoscaling", Version: "v2", Kind: "HorizontalPodAutoscaler"}
 	pdbGVK                 = schema.GroupVersionKind{Group: "policy", Version: "v1", Kind: "PodDisruptionBudget"}
-	computeGVK             = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: workloadKind}
+	coreGVK                = schema.GroupVersionKind{Group: workloadGroup, Version: workloadVersion, Kind: workloadKind}
 	roleGVK                = schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "Role"}
 	roleBindingGVK         = schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "RoleBinding"}
 	clusterRoleGVK         = schema.GroupVersionKind{Group: "rbac.authorization.k8s.io", Version: "v1", Kind: "ClusterRole"}
@@ -24,11 +24,11 @@ var (
 	networkPolicyGVK       = schema.GroupVersionKind{Group: "networking.k8s.io", Version: "v1", Kind: "NetworkPolicy"}
 )
 
-func TestComputeMinimal(t *testing.T) {
-	const name = "compute-minimal"
+func TestCoreMinimal(t *testing.T) {
+	const name = "core-minimal"
 
-	feat := features.New("compute/minimal").
-		Setup(applyNamespaced("testdata/compute-minimal.yaml")).
+	feat := features.New("core/minimal").
+		Setup(applyNamespaced("testdata/core-minimal.yaml")).
 		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
 		Assess("serviceaccount present", assertExists(
 			serviceAccountGVK,
@@ -70,11 +70,11 @@ func TestComputeMinimal(t *testing.T) {
 	testenv.Test(t, feat)
 }
 
-func TestComputeFull(t *testing.T) {
-	const name = "compute-full"
+func TestCoreFull(t *testing.T) {
+	const name = "core-full"
 
-	feat := features.New("compute/full").
-		Setup(applyNamespaced("testdata/compute-full.yaml")).
+	feat := features.New("core/full").
+		Setup(applyNamespaced("testdata/core-full.yaml")).
 		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
 		Assess("serviceaccount present", assertExists(
 			serviceAccountGVK,
@@ -116,11 +116,11 @@ func TestComputeFull(t *testing.T) {
 	testenv.Test(t, feat)
 }
 
-func TestComputeStatefulSet(t *testing.T) {
-	const name = "compute-statefulset"
+func TestCoreStatefulSet(t *testing.T) {
+	const name = "core-statefulset"
 
-	feat := features.New("compute/statefulset").
-		Setup(applyNamespaced("testdata/compute-statefulset.yaml")).
+	feat := features.New("core/statefulset").
+		Setup(applyNamespaced("testdata/core-statefulset.yaml")).
 		Assess("statefulset available", assertStatefulSetAvailable(testNamespace, name)).
 		Assess("serviceaccount present", assertExists(
 			serviceAccountGVK,
@@ -147,11 +147,11 @@ func TestComputeStatefulSet(t *testing.T) {
 	testenv.Test(t, feat)
 }
 
-func TestComputeDaemonSet(t *testing.T) {
-	const name = "compute-daemonset"
+func TestCoreDaemonSet(t *testing.T) {
+	const name = "core-daemonset"
 
-	feat := features.New("compute/daemonset").
-		Setup(applyNamespaced("testdata/compute-daemonset.yaml")).
+	feat := features.New("core/daemonset").
+		Setup(applyNamespaced("testdata/core-daemonset.yaml")).
 		Assess("daemonset available", assertDaemonSetAvailable(testNamespace, name)).
 		Assess("serviceaccount present", assertExists(
 			serviceAccountGVK,
@@ -178,11 +178,11 @@ func TestComputeDaemonSet(t *testing.T) {
 	testenv.Test(t, feat)
 }
 
-func TestComputeRBAC(t *testing.T) {
-	const name = "compute-rbac"
+func TestCoreRBAC(t *testing.T) {
+	const name = "core-rbac"
 
-	feat := features.New("compute/rbac").
-		Setup(applyNamespaced("testdata/compute-rbac.yaml")).
+	feat := features.New("core/rbac").
+		Setup(applyNamespaced("testdata/core-rbac.yaml")).
 		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
 		Assess("serviceaccount present", assertExists(
 			serviceAccountGVK,
@@ -214,11 +214,11 @@ func TestComputeRBAC(t *testing.T) {
 	testenv.Test(t, feat)
 }
 
-func TestComputeNetworkPolicy(t *testing.T) {
-	const name = "compute-networkpolicy"
+func TestCoreNetworkPolicy(t *testing.T) {
+	const name = "core-networkpolicy"
 
-	feat := features.New("compute/networkpolicy").
-		Setup(applyNamespaced("testdata/compute-networkpolicy.yaml")).
+	feat := features.New("core/networkpolicy").
+		Setup(applyNamespaced("testdata/core-networkpolicy.yaml")).
 		Assess("deployment available", assertDeploymentAvailable(testNamespace, name)).
 		Assess("networkpolicy present", assertExists(
 			networkPolicyGVK,

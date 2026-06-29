@@ -1,7 +1,7 @@
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
-  name: compute-rbac
+  name: core-rbac
 spec:
   image: gcr.io/google-samples/hello-app:1.0
   serviceAccount:

@@ -152,7 +152,7 @@ func installKRO(ctx context.Context, cfg *envconf.Config) (context.Context, erro
 	return ctx, nil
 }
 
-// applyRGDs applies the PodSpec RGD first (the Compute RGD references it), then the Compute RGD.
+// applyRGDs applies the PodSpec RGD first (the Core RGD references it), then the Core RGD.
 func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error) {
 	r := cfg.Client().Resources()
 
@@ -173,9 +173,9 @@ func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error
 		return ctx, err
 	}
 
-	// Validate Compute RGD using KRO CLI (now that PodSpec CRD is established)
+	// Validate Core RGD using KRO CLI (now that PodSpec CRD is established)
 	if err := kroValidateRGD(rgdPath); err != nil {
-		return ctx, fmt.Errorf("KRO CLI validation failed for Compute RGD: %w", err)
+		return ctx, fmt.Errorf("KRO CLI validation failed for Core RGD: %w", err)
 	}
 
 	err = applyAndWaitRGD(
@@ -183,7 +183,7 @@ func applyRGDs(ctx context.Context, cfg *envconf.Config) (context.Context, error
 		r,
 		rgdPath,
 		rgdName,
-		computeCRDName,
+		coreCRDName,
 	)
 
 	if err != nil {

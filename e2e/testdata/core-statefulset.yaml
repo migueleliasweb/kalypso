@@ -1,7 +1,8 @@
 apiVersion: kalypso.lmoet.io/v1alpha2
-kind: Compute
+kind: Core
 metadata:
-  name: compute-daemonset
+  name: core-statefulset
 spec:
-  workloadType: DaemonSet
+  workloadType: StatefulSet
   image: gcr.io/google-samples/hello-app:1.0
+  replicas: 2

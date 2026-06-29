@@ -40,17 +40,17 @@ const (
 
 // The RGDs under test and the APIs they generate.
 const (
-	podSpecRGDPath = "../capabilities/compute/v1alpha2/podspec-rgd.yaml"
+	podSpecRGDPath = "../capabilities/core/v1alpha2/podspec-rgd.yaml"
 	podSpecRGDName = "podspec"
 	podSpecCRDName = "podspecs.kalypso.lmoet.io"
 
-	rgdPath        = "../capabilities/compute/v1alpha2/compute-rgd.yaml"
-	rgdName        = "compute"
-	computeCRDName = "computes.kalypso.lmoet.io"
+	rgdPath        = "../capabilities/core/v1alpha2/core-rgd.yaml"
+	rgdName        = "core"
+	coreCRDName    = "cores.kalypso.lmoet.io"
 
 	workloadGroup   = "kalypso.lmoet.io"
 	workloadVersion = "v1alpha2"
-	workloadKind    = "Compute"
+	workloadKind    = "Core"
 
 	// testNamespace is where namespaced instances (and their children) go.
 	testNamespace = "workloads"
