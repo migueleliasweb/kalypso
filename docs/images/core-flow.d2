@@ -8,18 +8,17 @@ vars: {
   }
 }
 
-grid-rows: 3
+direction: right
 
 style.fill: "#0B0F19"
 
 classes: {
   input-node: {
     style: {
-      font-size: 14
-      font-color: "#F8FAFC"
       fill: "#312E81"
       stroke: "#6366F1"
       stroke-width: 2
+      font-color: "#F8FAFC"
       border-radius: 10
       bold: true
     }
@@ -27,11 +26,10 @@ classes: {
 
   internal-container: {
     style: {
-      font-size: 14
-      font-color: "#F8FAFC"
       fill: "#0F172A"
       stroke: "#475569"
       stroke-width: 2
+      font-color: "#F8FAFC"
       border-radius: 12
       bold: true
     }
@@ -39,47 +37,60 @@ classes: {
 
   internal-node: {
     style: {
-      font-size: 11
-      font-color: "#F1F5F9"
       fill: "#1E293B"
       stroke: "#64748B"
-      stroke-width: 1
+      font-color: "#F1F5F9"
       border-radius: 6
     }
   }
 
   podtemplate-node: {
     style: {
-      font-size: 11
-      font-color: "#A5B4FC"
       fill: "#1E1B4B"
       stroke: "#818CF8"
       stroke-width: 2
+      font-color: "#A5B4FC"
       border-radius: 6
+    }
+  }
+
+  workload-container: {
+    style: {
+      fill: "#042F2E"
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 12
+      bold: true
     }
   }
 
   workload-node: {
     style: {
-      font-size: 13
-      font-color: "#F1F5F9"
       fill: "#115E59"
       stroke: "#0D9488"
+      font-color: "#F1F5F9"
+      border-radius: 6
+    }
+  }
+
+  addon-container: {
+    style: {
+      fill: "#2E1065"
+      stroke: "#8B5CF6"
       stroke-width: 2
-      border-radius: 8
+      font-color: "#F8FAFC"
+      border-radius: 12
       bold: true
     }
   }
 
   addon-node: {
     style: {
-      font-size: 11
-      font-color: "#F1F5F9"
       fill: "#5B21B6"
       stroke: "#8B5CF6"
-      stroke-width: 1
+      font-color: "#F1F5F9"
       border-radius: 6
-      bold: true
     }
   }
 
@@ -106,160 +117,114 @@ classes: {
       stroke: "#475569"
       stroke-width: 2
       stroke-dash: 4
+      font-color: "#94A3B8"
     }
   }
 }
 
-header: "" {
-  direction: right
-  style.fill: transparent
-  style.stroke-width: 0
-
-  title: "Kalypso Core RGD Flow Graph\nResource instantiation tree and conditional graph dependencies in v1alpha2" {
-    style: {
-      fill: transparent
-      stroke-width: 0
-      font-size: 22
-      font-color: "#F8FAFC"
-      bold: true
-    }
-  }
-
-  legend: "Legend\n■ Input Custom Resource (Indigo)\n■ Internal / Chained RGD (Slate)\n■ Core Workloads (Teal)\n■ Operational/Support Resources (Violet)" {
-    style: {
-      fill: "#1E293B"
-      stroke: "#334155"
-      border-radius: 8
-      font-color: "#F1F5F9"
-      font-size: 11
-    }
+# Root Title Node (flat node positioned nicely)
+title: "Kalypso Core RGD Flow Graph\nResource instantiation tree and conditional dependencies in v1alpha2" {
+  style: {
+    fill: transparent
+    stroke-width: 0
+    font-size: 18
+    font-color: "#F8FAFC"
+    bold: true
   }
 }
 
-flow: "" {
-  direction: right
-  style.fill: transparent
-  style.stroke-width: 0
-
-  core_cr: "Core CR\n(kalypso.lmoet.io/v1alpha2)" {
-    class: input-node
-    spec: |`yaml
-      kind: Core
-      spec:
-        workloadType: Deployment|StatefulSet|DaemonSet
-        image: string
-        port: int
-        # ...
-    `|
-  }
-
-  podspec_rgd: "PodSpec RGD (Chained)\nInternal resource mapping" {
-    grid-columns: 1
-    class: internal-container
-
-    sa: "ServiceAccount" {
-      class: internal-node
-      label: "ServiceAccount\nincludeWhen: serviceAccount.create"
-    }
-    cm: "ConfigMap" {
-      class: internal-node
-      label: "ConfigMap\nincludeWhen: configMap.enabled"
-    }
-    sec: "Secret" {
-      class: internal-node
-      label: "Secret\nincludeWhen: secret.enabled"
-    }
-    pt: "PodTemplate (Internal)" {
-      class: podtemplate-node
-      label: "PodTemplate (Internal)\nResolves container specs, probes, mounts, env, scheduling"
-    }
-  }
-
-  right_column: "" {
-    grid-columns: 1
-    style: {
-      fill: transparent
-      stroke-width: 0
-    }
-
-    # Workloads
-    dep: "Deployment" {
-      class: workload-node
-      label: "Deployment\nStandard stateless workloads\n(workloadType == 'Deployment')"
-    }
-    ss: "StatefulSet" {
-      class: workload-node
-      label: "StatefulSet\nStateful workloads with PVCs\n(workloadType == 'StatefulSet')"
-    }
-    ds: "DaemonSet" {
-      class: workload-node
-      label: "DaemonSet\nPer-node system agents\n(workloadType == 'DaemonSet')"
-    }
-
-    # Addons
-    hpa: "HorizontalPodAutoscaler (HPA)" {
-      class: addon-node
-      label: "HorizontalPodAutoscaler (HPA)\nincludeWhen: autoscaling.enabled && (Deployment || StatefulSet)"
-    }
-    pdb: "PodDisruptionBudget (PDB)" {
-      class: addon-node
-      label: "PodDisruptionBudget (PDB)\nincludeWhen: pdb.enabled"
-    }
-    netpol: "NetworkPolicy" {
-      class: addon-node
-      label: "NetworkPolicy\nincludeWhen: networkPolicy.enabled"
-    }
-    role: "Role & RoleBinding" {
-      class: addon-node
-      label: "Role & RoleBinding\nincludeWhen: size(rbac.rules) > 0"
-    }
-    crole: "ClusterRole & ClusterRoleBinding" {
-      class: addon-node
-      label: "ClusterRole & ClusterRoleBinding\nincludeWhen: size(rbac.clusterRules) > 0"
-    }
-  }
-
-  # Connections
-  core_cr -> podspec_rgd: "Chains to" {
-    class: blue-connector
-  }
-
-  podspec_rgd.pt -> right_column.dep: "Injects PodSpec" {
-    class: teal-connector
-  }
-  podspec_rgd.pt -> right_column.ss: {
-    class: teal-connector
-  }
-  podspec_rgd.pt -> right_column.ds: {
-    class: teal-connector
-  }
-
-  # Invisible edge to force right_column to column 3
-  podspec_rgd -> right_column: {
-    style: {
-      stroke: transparent
-      stroke-width: 0
-    }
-  }
-
-  # Dashed lines representing dependency + exclusivity
-  core_cr -> right_column.dep: { class: dashed-connector }
-  core_cr -> right_column.ss: { class: dashed-connector }
-  core_cr -> right_column.ds: { class: dashed-connector }
-  core_cr -> right_column.hpa: { class: dashed-connector }
-  core_cr -> right_column.pdb: { class: dashed-connector }
-  core_cr -> right_column.netpol: { class: dashed-connector }
-  core_cr -> right_column.role: { class: dashed-connector }
-  core_cr -> right_column.crole: { class: dashed-connector }
+core_cr: "Core CR\n(kalypso.lmoet.io/v1alpha2)" {
+  class: input-node
+  spec: |`yaml
+    kind: Core
+    spec:
+      workloadType: Deployment|StatefulSet|DaemonSet
+      image: string
+      port: int
+      # ...
+  `|
 }
 
+podspec_rgd: "PodSpec RGD (Chained)\nInternal resource mapping" {
+  class: internal-container
+  grid-columns: 1
+
+  sa: "ServiceAccount\nincludeWhen: serviceAccount.create" {
+    class: internal-node
+  }
+  cm: "ConfigMap\nincludeWhen: configMap.enabled" {
+    class: internal-node
+  }
+  sec: "Secret\nincludeWhen: secret.enabled" {
+    class: internal-node
+  }
+  pt: "PodTemplate (Internal)\nResolves container specs, probes, mounts, env, scheduling" {
+    class: podtemplate-node
+  }
+}
+
+workloads: "Compute Type (Exclusive workloads)" {
+  class: workload-container
+  grid-columns: 1
+
+  dep: "Deployment\nStandard stateless workloads\n(workloadType == 'Deployment')" {
+    class: workload-node
+  }
+  ss: "StatefulSet\nStateful workloads with PVCs\n(workloadType == 'StatefulSet')" {
+    class: workload-node
+  }
+  ds: "DaemonSet\nPer-node system agents\n(workloadType == 'DaemonSet')" {
+    class: workload-node
+  }
+}
+
+addons: "(Conditional Addons)" {
+  class: addon-container
+  grid-columns: 1
+
+  hpa: "HorizontalPodAutoscaler (HPA)\nincludeWhen: autoscaling.enabled && (Deployment || StatefulSet)" {
+    class: addon-node
+  }
+  pdb: "PodDisruptionBudget (PDB)\nincludeWhen: pdb.enabled" {
+    class: addon-node
+  }
+  netpol: "NetworkPolicy\nincludeWhen: networkPolicy.enabled" {
+    class: addon-node
+  }
+  role: "Role & RoleBinding\nincludeWhen: size(rbac.rules) > 0" {
+    class: addon-node
+  }
+  crole: "ClusterRole & ClusterRoleBinding\nincludeWhen: size(rbac.clusterRules) > 0" {
+    class: addon-node
+  }
+}
+
+# Main Connections
+core_cr -> podspec_rgd: "Chains to" {
+  class: blue-connector
+}
+
+podspec_rgd.pt -> workloads: "Injects PodSpec" {
+  class: teal-connector
+}
+
+core_cr -> workloads: "Selects workloadType" {
+  class: dashed-connector
+}
+
+core_cr -> addons: "Conditionally enables" {
+  class: dashed-connector
+}
+
+# Notes (positioned at the bottom)
 notes: "• All resources are namespace-scoped to match the Core CR, except ClusterRole/Binding (prefixed by namespace).\n• Deployment, StatefulSet, and DaemonSet share the exact same PodSpec definition resolved by the internal PodSpec RGD." {
   style: {
     fill: transparent
     stroke-width: 0
-    font-size: 12
+    font-size: 11
     font-color: "#94A3B8"
   }
 }
+
 
 
