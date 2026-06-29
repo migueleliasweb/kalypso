@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 340" width="100%" height="100%">
+  <!-- Typography & Styling -->
+  <style>
+    .title { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 15px; font-weight: 700; fill: #F8FAFC; }
+    .subtitle { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; fill: #64748B; }
+    .label { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 600; fill: #F1F5F9; }
+    .yaml-key { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 10px; fill: #818CF8; }
+    .yaml-val { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 10px; fill: #34D399; }
+    .yaml-meta { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 10px; fill: #94A3B8; }
+    .k8s-text { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 11px; font-weight: 600; fill: #F1F5F9; }
+    .arrow-text { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; font-weight: 600; fill: #6366F1; }
+    
+    /* Subtle hover effect */
+    .glowing-node { transition: transform 0.2s ease, filter 0.2s ease; }
+    .glowing-node:hover { transform: translate(-1px, -1px); filter: brightness(1.1); }
+  </style>
+
+  <!-- Dark Slate Background -->
+  <rect width="920" height="340" rx="12" fill="#0B0F19" />
+
+  <defs>
+    <!-- Soft Drop Shadows -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <!-- Purple Engine Glow -->
+    <filter id="glow-purple" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#8B5CF6" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="grad-yaml" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="grad-engine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+    <linearGradient id="grad-k8s" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+
+    <!-- Markers -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#4F46E5" />
+    </marker>
+  </defs>
+
+  <!-- Connectors -->
+  <g>
+    <!-- Left to Center -->
+    <path d="M 285,160 L 385,160" fill="none" stroke="#4F46E5" stroke-width="2.5" stroke-dasharray="5,3" marker-end="url(#arrow)" />
+    <text class="arrow-text" x="335" y="148" text-anchor="middle">Declares Spec</text>
+
+    <!-- Center to Right (Split lines) -->
+    <path d="M 505,160 L 595,160" fill="none" stroke="#4F46E5" stroke-width="2.5" marker-end="url(#arrow)" />
+    <text class="arrow-text" x="550" y="148" text-anchor="middle">Generates</text>
+  </g>
+
+  <!-- 1. LEFT COLUMN: Developer Intent -->
+  <g class="glowing-node" filter="url(#shadow)" transform="translate(40, 45)">
+    <!-- Header -->
+    <text class="title" x="0" y="-12">1. Developer Intent (Single CR)</text>
+    <text class="subtitle" x="0" y="5">Clean, abstract interface for application configuration</text>
+
+    <!-- Yaml Card -->
+    <rect x="0" y="20" width="245" height="210" rx="8" fill="url(#grad-yaml)" stroke="#334155" stroke-width="1.5" />
+    <g transform="translate(15, 32)">
+      <text class="yaml-meta" x="0" y="12">apiVersion: <tspan fill="#818CF8">kalypso.lmoet.io/v1alpha2</tspan></text>
+      <text class="yaml-meta" x="0" y="26">kind: <tspan fill="#F1F5F9" font-weight="bold">Core</tspan></text>
+      <text class="yaml-meta" x="0" y="40">metadata:</text>
+      <text class="yaml-meta" x="12" y="54">name: <tspan fill="#34D399">my-app</tspan></text>
+      <text class="yaml-meta" x="0" y="68">spec:</text>
+      <text class="yaml-key" x="12" y="82">image: <tspan fill="#34D399">"nginx:alpine"</tspan></text>
+      <text class="yaml-key" x="12" y="96">replicas: <tspan fill="#F59E0B">3</tspan></text>
+      <text class="yaml-key" x="12" y="110">port: <tspan fill="#F59E0B">80</tspan></text>
+      <text class="yaml-key" x="12" y="124">autoscaling:</text>
+      <text class="yaml-key" x="24" y="138">enabled: <tspan fill="#EF4444">true</tspan></text>
+      <text class="yaml-key" x="12" y="152">networkPolicy:</text>
+      <text class="yaml-key" x="24" y="166">enabled: <tspan fill="#EF4444">true</tspan></text>
+      <text class="yaml-key" x="12" y="180">rbac: <tspan fill="#94A3B8">{rules: [...]}</tspan></text>
+    </g>
+  </g>
+
+  <!-- 2. CENTER COLUMN: Kalypso Core Engine -->
+  <g class="glowing-node" filter="url(#glow-purple)" transform="translate(395, 115)">
+    <rect width="110" height="90" rx="16" fill="url(#grad-engine)" />
+    <!-- Kalypso text and mini gears/circles -->
+    <text class="label" x="55" y="38" font-size="14" font-weight="800" text-anchor="middle" fill="#FFFFFF">KALYPSO</text>
+    <text class="label" x="55" y="53" font-size="9" font-weight="700" text-anchor="middle" fill="#E9D5FF" letter-spacing="1">RGD ENGINE</text>
+    <text class="label" x="55" y="66" font-size="8" text-anchor="middle" fill="#C084FC">(KRO Runtime)</text>
+  </g>
+
+  <!-- 3. RIGHT COLUMN: Kubernetes Resources Generated -->
+  <g transform="translate(605, 45)">
+    <!-- Header -->
+    <text class="title" x="0" y="-12">2. Generated Kubernetes Resources</text>
+    <text class="subtitle" x="0" y="5">Automated instantiation &amp; graph synchronization</text>
+
+    <!-- Workload resources group background shadow container -->
+    <rect x="0" y="20" width="275" height="210" rx="8" fill="#0F172A" opacity="0.4" stroke="#1E293B" stroke-width="1.5" />
+
+    <!-- Resource Pills -->
+    <!-- Core Workload (Deployment) -->
+    <g class="glowing-node" transform="translate(15, 35)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#0D9488" stroke-width="1.5" />
+      <text class="k8s-text" x="10" y="22" fill="#2DD4BF">Deployment</text>
+    </g>
+
+    <!-- ServiceAccount -->
+    <g class="glowing-node" transform="translate(145, 35)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#3B82F6" stroke-width="1" />
+      <text class="k8s-text" x="10" y="22" fill="#93C5FD">ServiceAccount</text>
+    </g>
+
+    <!-- HPA -->
+    <g class="glowing-node" transform="translate(15, 85)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#8B5CF6" stroke-width="1" />
+      <text class="k8s-text" x="10" y="22" fill="#C084FC">HPA v2</text>
+    </g>
+
+    <!-- PDB -->
+    <g class="glowing-node" transform="translate(145, 85)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#8B5CF6" stroke-width="1" />
+      <text class="k8s-text" x="10" y="22" fill="#C084FC">PodDisruption</text>
+    </g>
+
+    <!-- NetworkPolicy -->
+    <g class="glowing-node" transform="translate(15, 135)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#EF4444" stroke-width="1" />
+      <text class="k8s-text" x="10" y="22" fill="#FCA5A5">NetworkPolicy</text>
+    </g>
+
+    <!-- RBAC Role & Binding -->
+    <g class="glowing-node" transform="translate(145, 135)">
+      <rect width="115" height="36" rx="6" fill="url(#grad-k8s)" stroke="#F59E0B" stroke-width="1" />
+      <text class="k8s-text" x="10" y="22" fill="#FDE047">Role &amp; Binding</text>
+    </g>
+
+    <!-- ConfigMap / Secret (Conditional) -->
+    <g class="glowing-node" transform="translate(15, 185)">
+      <rect width="245" height="32" rx="6" fill="url(#grad-k8s)" stroke="#64748B" stroke-width="1" />
+      <text class="k8s-text" x="65" y="20" fill="#CBD5E1">ConfigMaps / Secrets</text>
+    </g>
+  </g>
+
+  <!-- Footer description text -->
+  <text class="subtitle" x="460" y="300" text-anchor="middle">• Developers only manage 1 manifest instead of 7+, avoiding boilerplate and complex K8s configurations.</text>
+</svg>

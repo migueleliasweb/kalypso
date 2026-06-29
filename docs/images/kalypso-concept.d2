@@ -1,137 +1,203 @@
-# Kalypso - High-Level Conceptual Diagram
-# Written in D2 (https://d2lang.com)
 vars: {
   d2-config: {
     layout-engine: elk
-    theme-id: 300
-  }
-}
-
-style.fill: transparent
-
-classes: {
-  purple-box: {
-    style: {
-      fill: "#4F46E5"
-      stroke: "#8B5CF6"
-      font-color: "#FFFFFF"
-      border-radius: 12
-      bold: true
-    }
-  }
-  main-box: {
-    style: {
-      # fill: "#a9a9a9"
-      fill-pattern: none
-      stroke: "#334155"
-      border-radius: 8
-      font-color: "#FFFFFF"
-      bold: true
-      stroke-width: 0
-      font-color: "#6f6f6f"
-    }
-  }
-  connector: {
-    style: {
-      stroke: "#4F46E5"
-      font-color: "#6366F1"
-      stroke-dash: 5
-    }
+    theme-id: 200
   }
 }
 
 direction: right
 
-kalypso-crd: "Kalypso CRD" {
-  class: main-box
+style.fill: "#0B0F19"
 
-  spec: |`yaml
-    apiVersion: kalypso.lmoet.io/v1alpha2
-    kind: Core
-    metadata:
-      name: my-app
-    spec:
-      image: "nginx:alpine"
-      replicas: 3
-      port: 80
-      autoscaling:
-        enabled: true
-      networkPolicy:
-        enabled: true
-      rbac: {rules: [...]}
-  `| {
+classes: {
+  input-node: {
     style: {
-      fill: "#0B0F19"
-      stroke-width: 0
+      fill: "#312E81"
+      stroke: "#6366F1"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 10
+      bold: true
+    }
+  }
+
+  internal-node: {
+    style: {
+      fill: "#0F172A"
+      stroke: "#475569"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 12
+      bold: true
+    }
+  }
+
+  sub-resource-node: {
+    style: {
+      fill: "#1E293B"
+      stroke: "#64748B"
+      font-color: "#F1F5F9"
+      border-radius: 6
+    }
+  }
+
+  workload-node: {
+    style: {
+      fill: "#115E59"
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 10
+      bold: true
+    }
+  }
+
+  addon-node: {
+    style: {
+      fill: "#5B21B6"
+      stroke: "#8B5CF6"
+      stroke-width: 2
+      font-color: "#F8FAFC"
+      border-radius: 8
+      bold: true
+    }
+  }
+
+  blue-connector: {
+    style: {
+      stroke: "#38BDF8"
+      stroke-width: 2
+      font-color: "#38BDF8"
+      bold: true
+    }
+  }
+
+  teal-connector: {
+    style: {
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#0D9488"
+      bold: true
+    }
+  }
+
+  dashed-connector: {
+    style: {
+      stroke: "#475569"
+      stroke-width: 2
+      stroke-dash: 4
+      font-color: "#94A3B8"
+    }
+  }
+
+  info: {
+    style: {
+      stroke: "#0D9488"
+      stroke-width: 2
+      font-color: "#0D9488"
+      bold: true
+      font-size: 26
     }
   }
 }
 
-kro-runtime: "KRO RUNTIME" {
-  class: purple-box
+info: "Upwards of 90% config reduction \nwhen using Kalypso CRDs!" {
+  shape: text
+
+  class: info
 }
 
-generated: "Generated \nKubernetes Resources" {
-  class: main-box
-
-  grid-rows: 4
-
-  deployment: "Deployment" {
-    style.fill: "#0B0F19"
-    style.stroke: "#0D9488"
-    style.font-color: "#2DD4BF"
-    style.bold: true
-  }
-  sa: "ServiceAccount" {
-    style.fill: "#0B0F19"
-    style.stroke: "#3B82F6"
-    style.font-color: "#93C5FD"
-    style.bold: true
-  }
-  hpa: "HPA v2" {
-    style.fill: "#0B0F19"
-    style.stroke: "#8B5CF6"
-    style.font-color: "#C084FC"
-    style.bold: true
-  }
-  pdb: "PodDisruption" {
-    style.fill: "#0B0F19"
-    style.stroke: "#8B5CF6"
-    style.font-color: "#C084FC"
-    style.bold: true
-  }
-  netpol: "NetworkPolicy" {
-    style.fill: "#0B0F19"
-    style.stroke: "#EF4444"
-    style.font-color: "#FCA5A5"
-    style.bold: true
-  }
-  rbac: "Role & Binding" {
-    style.fill: "#0B0F19"
-    style.stroke: "#F59E0B"
-    style.font-color: "#FDE047"
-    style.bold: true
-  }
-  config: "ConfigMaps / Secrets" {
-    style.fill: "#0B0F19"
-    style.stroke: "#64748B"
-    style.font-color: "#CBD5E1"
-    style.bold: true
-  }
+# --- 1. Core CR Input (Indigo)
+core_cr: "Kalypso Core CRD" {
+  class: input-node
+  yaml: |`yaml
+    apiVersion: kalypso.lmoet.io/v1alpha2
+    kind: Core
+    metadata:
+      name: my-app
+      namespace: default
+    spec:
+      computeType: Deployment
+      image: nginx:1.25
+      port: 80
+      pdb:
+        enabled: true
+        maxUnavailable: "1"
+      autoscaling:
+        enabled: false
+  `|
 }
 
-user: "User" {
-  class: purple-box
+# --- 2. PodSpec RGD (Internal Slate)
+podspec_rgd: "PodSpec RGD (Chained)" {
+  class: internal-node
 }
 
-user -> kalypso-crd: "Applies" {
-  class: connector
+# --- 3. Derived Helper Sub-resources (Slate-medium)
+sa_resource: "ServiceAccount" {
+  class: sub-resource-node
 }
 
-kalypso-crd <- kro-runtime: "Watches" {
-  class: connector
+cm_resource: "ConfigMap" {
+  class: sub-resource-node
 }
 
-kro-runtime -> generated: "Generates" {
-  class: connector
+sec_resource: "Secret" {
+  class: sub-resource-node
 }
+
+# --- 4. Workloads (Teal)
+deployment_res: "Deployment" {
+  class: workload-node
+}
+
+statefulset_res: "StatefulSet" {
+  class: workload-node
+}
+
+daemonset_res: "DaemonSet" {
+  class: workload-node
+}
+
+# --- 5. Addons (Purple/Violet)
+hpa_res: "HorizontalPodAutoscaler" {
+  class: addon-node
+}
+
+pdb_res: "PodDisruptionBudget" {
+  class: addon-node
+}
+
+netpol_res: "NetworkPolicy" {
+  class: addon-node
+}
+
+rbac_res: "Roles & Bindings" {
+  class: addon-node
+}
+
+crbac_res: "ClusterRoles & Bindings" {
+  class: addon-node
+}
+
+# --- Connections representing instantiation flow
+core_cr -> podspec_rgd: "Delegates PodSpec fields" {
+  class: blue-connector
+}
+
+# Chained RGD helper resolution
+podspec_rgd -> sa_resource: "Creates if enabled" {class: dashed-connector}
+podspec_rgd -> cm_resource: "Creates if enabled" {class: dashed-connector}
+podspec_rgd -> sec_resource: "Creates if enabled" {class: dashed-connector}
+
+# Workloads derived from Chained PodSpec output status
+podspec_rgd -> deployment_res: "(conditional) computeType: Deployment" {class: teal-connector}
+podspec_rgd -> statefulset_res: "(conditional) computeType: StatefulSet" {class: teal-connector}
+podspec_rgd -> daemonset_res: "(conditional) computeType: DaemonSet" {class: teal-connector}
+
+# Top level CR conditional configurations
+core_cr -> hpa_res: "If autoscaling.enabled" {class: dashed-connector}
+core_cr -> pdb_res: "If pdb.enabled" {class: dashed-connector}
+core_cr -> netpol_res: "If networkPolicy.enabled" {class: dashed-connector}
+core_cr -> rbac_res: "If rbac.rules present" {class: dashed-connector}
+core_cr -> crbac_res: "If rbac.clusterRules present" {class: dashed-connector}

@@ -6,7 +6,9 @@ A series of high-level, opinionated Custom Resources for Kubernetes-based Platfo
     <img src="./kalypso.png" width="300">
 </p>
 
-Kalypso provides platform engineers and developers with ready-to-use building blocks—called **Capabilities**—which aggregate standard, low-level Kubernetes resources into clean, simplified high-level CRDs.
+Kalypso provides Platform Engineers and Developers with ready-to-use building blocks—called **Capabilities**—which aggregate standard, low-level Kubernetes resources into clean, simplified high-level CRDs.
+
+Kalypso can provide upwards of **90%** configuration reduction compared to managing every single Kubernetes resource individually.
 
 ---
 
@@ -24,7 +26,7 @@ kro apply -f capabilities/<version>/*
 
 Kalypso abstracts multi-resource deployments by providing a simple, high-level developer spec that automatically generates, binds, and manages a complete set of underlying Kubernetes resources.
 
-![Kalypso Concept Diagram](docs/images/kalypso-concept-d2.svg)
+![Kalypso Concept Diagram](docs/images/kalypso-concept.svg)
 
 ---
 
