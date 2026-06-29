@@ -16,16 +16,16 @@ The core capability implemented in `v1alpha2` is the **Compute** capability, whi
 
 ## Architectural Flow
 
-The following diagram illustrates how a single `Compute` Custom Resource is processed by KRO to automatically generate various standard Kubernetes resources based on your specification.
+The following diagram illustrates how a single `Core` Custom Resource is processed by KRO to automatically generate various standard Kubernetes resources based on your specification.
 
-![Compute Flow Diagram](images/compute-flow.svg)
+![Core Flow Diagram](images/Core-flow.svg)
 
 ---
 
 ## Feature Details
 
 ### 1. Workload Types (Exclusive)
-Based on `spec.workloadType`, the `Compute` capability creates one (and only one) of the following core workload controllers:
+Based on `spec.workloadType`, the `Core` capability creates one (and only one) of the following core workload controllers:
 * **Deployment**: Used for stateless services (Default).
 * **StatefulSet**: Used for stateful applications. Mounts persistent volumes using `spec.volumeClaimTemplates`.
 * **DaemonSet**: Runs a pod replica on every matching node in the cluster.
@@ -56,7 +56,7 @@ Secure traffic to and from the pods by setting `spec.networkPolicy.enabled: true
 
 ## API Schema Reference
 
-Below is a detailed reference of the schema fields defined in the `Compute` spec.
+Below is a detailed reference of the schema fields defined in the `Core` spec.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
