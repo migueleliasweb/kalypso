@@ -2,9 +2,11 @@
 
 A series of high-level, opinionated Custom Resources for Kubernetes-based Platforms, powered by [KRO](https://kro.run) (Kube Resource Operator).
 
-![kalypso](kalypso.png)
+<p align="center">
+    <img src="./kalypso.png" width="300">
+</p>
 
-Kalypso provides platform engineers and developers with ready-to-use building blocks—called **Capabilities**—which aggregate standard, low-level Kubernetes resources into clean, simplified interfaces.
+Kalypso provides platform engineers and developers with ready-to-use building blocks—called **Capabilities**—which aggregate standard, low-level Kubernetes resources into clean, simplified high-level CRDs.
 
 ---
 
