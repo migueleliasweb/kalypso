@@ -74,24 +74,22 @@ func TestMain(m *testing.M) {
 }
 
 // shouldDestroy reports whether the suite should tear things down (cluster and
-// instances). Default is true to avoid lingering resources; set this to false
-// to leave the cluster running.
+// instances). Default is false to leave the cluster running; set this truthy to
+// destroy it on finish.
 func shouldDestroy() bool {
 	val, ok := os.LookupEnv(destroyEnvVar)
+
 	if !ok {
-		return true
+		return false
 	}
+
 	switch val {
 	case "yes", "true", "1", "y", "Y":
 		return true
-	case "no", "false", "0", "n", "N":
-		return false
 	default:
-		return true
+		return false
 	}
 }
-
-
 
 // installCRDs fetches and applies the Istio + Prometheus CRDs the Workload RGD
 // references, so KRO can create those kinds when capabilities are enabled.
@@ -203,8 +201,6 @@ func kroValidateRGD(rgdPath string) error {
 	}
 	return nil
 }
-
-
 
 // applyAndWaitRGD applies an RGD manifest then waits for its generated CRD to be
 // Established and the RGD itself to reach state Active (dynamic controller up).
