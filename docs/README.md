@@ -28,7 +28,7 @@ Below is a detailed reference of the schema fields defined in the `Core` spec.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `workloadType` | `string` | `"Deployment"` | The type of workload to run. Allowed values: `Deployment`, `StatefulSet`, `DaemonSet`. |
+| `computeType` | `string` | `"Deployment"` | The type of workload to run. Allowed values: `Deployment`, `StatefulSet`, `DaemonSet`. |
 | `replicas` | `integer` | `1` | Number of replicas to run (applicable to `Deployment` and `StatefulSet` only). |
 | `image` | `string` | *Required* | Container image to run. |
 | `port` | `integer` | `8080` | Container port that the application listens on. |
@@ -76,7 +76,7 @@ metadata:
   name: app-production
   namespace: default
 spec:
-  workloadType: Deployment
+  computeType: Deployment
   image: gcr.io/google-samples/hello-app:2.0
   port: 8080
   replicas: 3
@@ -120,7 +120,7 @@ metadata:
   name: database-stateful
   namespace: default
 spec:
-  workloadType: StatefulSet
+  computeType: StatefulSet
   image: redis:7.0-alpine
   port: 6379
   replicas: 2
@@ -144,7 +144,7 @@ metadata:
   name: logging-agent
   namespace: kube-system
 spec:
-  workloadType: DaemonSet
+  computeType: DaemonSet
   image: fluent/fluent-bit:2.1
   port: 2020
   serviceAccount:

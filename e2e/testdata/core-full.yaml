@@ -3,7 +3,7 @@ kind: Core
 metadata:
   name: core-full
 spec:
-  workloadType: Deployment
+  computeType: Deployment
   image: gcr.io/google-samples/hello-app:1.0
   port: 8080
   replicas: 2

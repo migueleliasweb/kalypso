@@ -55,10 +55,10 @@ KRO maps instance fields into Kubernetes resources using Common Expression Langu
 
 ### Exclusive Workloads Pattern
 
-To support only one of Deployment, StatefulSet, or DaemonSet at a time, each resource has an `includeWhen` checking the `workloadType`:
-- **Deployment**: `${schema.spec.workloadType == "Deployment"}`
-- **StatefulSet**: `${schema.spec.workloadType == "StatefulSet"}`
-- **DaemonSet**: `${schema.spec.workloadType == "DaemonSet"}`
+To support only one of Deployment, StatefulSet, or DaemonSet at a time, each resource has an `includeWhen` checking the `computeType` (in v1alpha2):
+- **Deployment**: `${schema.spec.computeType == "Deployment"}`
+- **StatefulSet**: `${schema.spec.computeType == "StatefulSet"}`
+- **DaemonSet**: `${schema.spec.computeType == "DaemonSet"}`
 
 ### Status reporting
 
@@ -81,7 +81,7 @@ status:
 
 To safely reference resource statuses when some resources might be excluded:
 ```yaml
-readyReplicas: ${schema.spec.workloadType == "Deployment" ? deployment.status.readyReplicas : (schema.spec.workloadType == "StatefulSet" ? statefulSet.status.readyReplicas : daemonSet.status.numberReady)}
+readyReplicas: ${schema.spec.computeType == "Deployment" ? deployment.status.readyReplicas : (schema.spec.computeType == "StatefulSet" ? statefulSet.status.readyReplicas : daemonSet.status.numberReady)}
 ```
 *Note: The short-circuiting in CEL prevents evaluating properties of uncreated resources.*
 

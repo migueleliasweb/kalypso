@@ -3,6 +3,6 @@ kind: Core
 metadata:
   name: core-statefulset
 spec:
-  workloadType: StatefulSet
+  computeType: StatefulSet
   image: gcr.io/google-samples/hello-app:1.0
   replicas: 2

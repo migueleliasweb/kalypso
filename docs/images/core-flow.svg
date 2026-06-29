@@ -1,228 +1,159 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 860" width="100%" height="100%">
-  <!-- Styles for elements -->
-  <style>
-    .title { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 24px; font-weight: 800; fill: #F8FAFC; }
-    .subtitle { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 14px; fill: #94A3B8; }
-    .label { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 13px; font-weight: 600; fill: #F1F5F9; }
-    .desc { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; fill: #94A3B8; }
-    .cond-text { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 10px; fill: #F43F5E; font-weight: bold; }
-    .box-title { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 14px; font-weight: 700; fill: #F8FAFC; }
-    .box-desc { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; fill: #94A3B8; }
-    .resource-text { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; fill: #E2E8F0; }
-    .arrow-text { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 11px; fill: #38BDF8; font-weight: 600; }
-    
-    /* Hover effects and transitions */
-    .node-card { transition: transform 0.2s ease, filter 0.2s ease; }
-    .node-card:hover { transform: translate(-2px, -2px); filter: brightness(1.1); }
-  </style>
+<?xml version="1.0" encoding="utf-8"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-d2-version="v0.7.1-HEAD" preserveAspectRatio="xMinYMin meet" viewBox="0 0 2556 2107"><svg class="d2-1919814611 d2-svg" width="2556" height="2107" viewBox="-88 -89 2556 2107"><rect x="-88.000000" y="-89.000000" width="2556.000000" height="2107.000000" rx="0.000000" fill="transparent" stroke-width="0" /><style type="text/css"><![CDATA[
+.d2-1919814611 .text-mono {
+	font-family: "d2-1919814611-font-mono";
+}
+@font-face {
+	font-family: d2-1919814611-font-mono;
+	src: url("data:application/font-woff;base64,d09GRgABAAAAABeYAAoAAAAAJkgAAgm6AAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAAA9AAAAGAAAABgld/X+GNtYXAAAAFUAAAA1QAAAS4HIwjmZ2x5ZgAAAiwAAAz2AAARNIJ4QZpoZWFkAAAPJAAAADYAAAA2GanOOmhoZWEAAA9cAAAAJAAAACQGMwDDaG10eAAAD4AAAAChAAAA8IygFXpsb2NhAAAQJAAAAHoAAAB6iLaElm1heHAAABCgAAAAIAAAACAAcAJhbmFtZQAAEMAAAAa4AAAQztydAx9wb3N0AAAXeAAAACAAAAAg/7gAMwADAlgBkAAFAAACigJYAAAASwKKAlgAAAFeADIBIwAAAgsFCQMEAwICBCAAAvcCADgDAAAAAAAAAABBREJPAEAAIP//Au7/BgAAA9gBEWAAAZ8AAAAAAeYClAAAACAAA3icjM+3SqsBHMbh50s7OSc5PfYWE0tiL7EgODiKi7g5BgcJLiI4CN6UYMNFvRSvwiHDX/jMBfjOz/B7kchKUJZLamioyimqqpvRtGRZy45d+w4dazvVce7SlesIenI2laup3HPgSNuJjjMXnzLeVOSVZBSiG+/Rjdd4ied4jIe4j7u4jZt4Slu+tsSWeWvWtazYsGCx17AtIysnr+Cbou9+KCn76Zff/vjrn/8q+vQbMGjIsBGjxoybUDWppm7KdPqroWnOJh8AAAD//wEAAP//RWIu9AAAAHicjHcNbBvnef/zvkfxLImWdKKOFCWKX0feiV+ixOPxKErityhRH5ZEiZYs68vWpxXLseXE/rt/x3MSu0mTbKM7r0kzJSjmYmnRtYtRYMpWYOm6IHAwrUiCLmg3p1jTQDXSzR00pVg26zjckfIHhgEFcXxf4N73uef5vb/f8zwvlEEEADfg60BAOWigFmgAnrJSDivHMSQpcnpeFBkzpiLotpRHKBNQBZ+8fPk7qrbErxPHfg9f3zsZvrK8PLx9569mzp///W30Y8BgAcAhnIdyoAC0JM+xLMeo1YSW1zIcQ94xv2OmrNWqGsvPPp75eCJyN4oeX1gQ19rb16RJnN87fesWAAAB8wCYwXmoAQPYZL94v05H16lJWhkYgvcHhQDLMNT+ZP6vk4vtoY7e4a+cOndkLDM4ML06Nn308CrOW9LhtqFqVeWh1LFZdDEoCp69ex3JLgEAQbywi114A5oAymwsKwSCQd6v05Msy9jUarpOp+P9QVGvVqPZkacHBq7mOqaMPkPCGZ0OBKaj3l6zj5vXjLzy2Oor2VaL0GiNn8tmLyRYhvf6AQDDOAB24jwckPFQopC95/adHv/T6xt/cm00c+bxx89kcP7bG699L/XixYtXQfZtHQDX4jxUKudC7//W0dekv0E10r+jAZxP/7jnbg8guAqA6xXcH6ylrqI/kv4WVUk7OJ/+eVr6J0AgFHYxjTfA/H/Fy/tFgRF4Sq1GI9mnM/3P5uITRl991Nc1xZ84lnE++755sRQw3yQ02OLnshevcd/plv7V7AUEQwC4fN9nmU08xVBWamgM1Y6NSXdxXvo3pN07jQTp75UYZwHQF6X1Ak8xgpVmKJ6evXEDvXrjRg8m0um9vR5Q1h4HwCmcB03RNo94UssQJH18jEB1s+/fmXn7DM5LmyjzhXQCTTz3gbznywC4CeehrOQP/eUs6sb5vc2SzV4AXIPz0Ki81+p5USt7HAgGRYYkGIJjTJimepemLCrz9NJwGYkJx0znFIsJdRnOS3dWV1H93mnUaxnPGS9LEsKXjblxi/SWbDsLgNU4D9p92ywryHgQHKPT0VR26sMoxuXDxQHnpYXn2x4LoLG902jjef8KL30bMLQWdnEz3oBq2cOHTkymkZorssgmnxvy9K3HYut9xf/+o0f7+48e1WS/fnL15eHhl1dPfj2byV+6+NJLFy/lZV4uAWCzgiX9kLrUDEPdF9TSu5m1rq5TvWdPHB4dy53AeXuut3vSI91DvfF0jwgKvxdK/K4C/cMq1TLEQ5YWtpLLHcPJN2Zff3JtcGRkcA3nmZHUwDQlfYJo6dfoSDQWDxTPI1nYxQa8AV4lWk5U9CcEWJbjWvCjbJXFqdebsOw3auv9ksfvmA+l+s2CbcYa94jHopEVu8dyiG9PM0HjlDPOhVY0gifs8IZbGJexynnQlWj1D3m99mCTNeAxNzdommu88bZAzg8IXAC4BeeBBLCWWInwT7Hqp7gvnd77S8XXocKuwnW6dDIUTxXzRVCZqtXIG1tsH7NHueaIY6R9XhNYn0GvSEupEbt9JIVelVZm1gOAwA2AvTgPBwF4gtfqdHo+GBS1PHHvg4lVylirqm2qOZF7H+el18OL4fBiGB3fOw0IKgDwIXwNHMV9JqznI1gUeX1ppuUJhijmX5I4tTDTSpSpEKGuqFDHhiNkRblahQkV0TI5txIjNWVEWcWBGL4mLTR6fVarz9O4u9voKc7Qa3uPowOmsMkUNkn/qcQeBMA2nAcDAK8leH3JaZEntEwp55Nk8J3NqamD9TWqKlozObH5ztT8QSOlqmo4eByNoq5v6TxNTR7dt6S3pZs363mTia+/qdhmAbAf56EawCo8YptG+PbEvNZep6pjtbOHb3+G/uzvHAPNzQPsj6TJz2Q+jhR2MYF2wAgcgL6kF7EFMzY1ySnsoSlG9o7zB0WhCtN1ut96+709G08hQ8jnO2KzOM7GFo4lSaJ5weQcda6cb4trrBG3mPFUWEWbgw7Vt6wdlT5KmH0J1nb5gLXN4nQAguHCLm5EO79DHZkc+H/pvouZjgmT0xRnQ7lW31jI229yNM9rOteHs+udriahweTLhcQxn90g2JsVnXUWdtF/41tQB1blC/sf4Dk5axYDEoX7X0PVs09EF9s9aTOhyqZIwjRq7I1boxZXt3NAc/XC0NmI1TT5g71QzOztzuyYG3yjoXG55EKqsIsb0A6o5QqBbGrSyrLEg4BkbVsfxBLpnKlEwbJD/sz5dPpM/MSTGEtPHzgx4OmxmuzT6OZgb3+flOw8OzK03vXUclVDRXbMQAfrbUWtLwPgBP4J6OTMwQiiEAjy/n1x0zzNUDsvvji30JvSmnhLPLy1hW5EypxHThojVeWpDk9Smi72Cr0FCw6iHWiFThgooSNjIQSCpUG2y9NMKcfZWK5Y6ooBqYmH0qi2lLL216Dm1XPDWrPJaGCEcd5pfu8SVe/PCVp3XW2d0Lo2czRxYcIXj/taEon23HExNEs7amzGkX/piUVaVJWsWd+mVWljbuGQW5OkAk2B/uby8kojZTQGIt5DPnQzGuCjUT4QlV7sdDD1KpXWSbPeQgEmAdDreAuz0A4Aagi3FjFbBcARfOvRGsiR9GpWhdQzP7o99f2z+JZkQvC29LPPz1xR9vQpOfUW1BSxoeTyrhR6+QhfHhz9bkFwu1tpW0hz5DD6JLn3j0KrrquqWtkblvMg2pFZx1O8rEPer9/XERWQZSWPrDIJJ0is9bt6aJp38e3ZgMFaN6BvNDhq0XbM5hrjvIMZ6ZvocM7BSt9Ah11ueQQE0wC4Eu1A3UPfKJovmp1OkSp2ov1wNhvodKfcaHvUGVyYkz5ETHfS45G+W9IHNqKd36VOxtaSybVY8T+dy6XTuVxJeZ3r2eH1ztTy6NjKytioTE+YLvCKXUV3+gfelXjE6GntvnG5NZ1OkYTtiPf4cmShwzZkIVTPxHOxjCXDMul/wN+PWFzPncmei1hNU99E6uXJ4XmG3TE3yDh/FQAb0A7UPoxBSQsk9dUUSbCnk40+ndZgbxIXPWj7bEeqvLKn/EB0QPolIOgp7OIqtAPN/6tuKlA8UjX3a2aw56KHdS0lI110PDEzt7QQWrE327K+iD/ZNzJu9c9pvOagye41a03Gg3VJsWPIYRD0RpfRbKuhXEEHl2hWONJd2MU2/AzUl5AXGEEUeVnASj9ZTBUv9GSZr7xUmfrNb4Q0E2qotWY0/GTndqRsYyP5q3hKU9GpoQDBYGEXfYG2ZS7obaWSKpugSlnut+PZUb7L1d2cTZIqx4RmYQ61SB93J90+NCI15NxBQNBW8GEObUODbKMEhSg+Ulmr8LN2I1Whr+RjtdW/HD1fZa5WHWzUrB76qDY49EFFnFB1eO3oV9J/WPoYJmNFB/d2Wge8QICrsIvjeAMqgYcogLZOpw+Wzl+7X20ezpZqUievEHl5piflrMIVI2Ll+Q9rqlxdjVYb1xKe8DMhC623x91dCVeMsYx6jc6qgdqAvVPQx3vt43/eFzB3GHyHbWY3xo1hkynubnIH997zZQV3UtQ7hxhP2tkbdiVDjf5ZrnkuFDsfaKFSdaLN+QMxYax3LQrGLuW8jin3iktKDlF6btk/iqePvfWHoUFz1xsp9JFwQF+z926qmHO6AXAFfkHpkYUILrGdexBiMMjzdObk1wZTPd5Bs8+9kJw73Xd13NRl/LBtLv+EIKa9Fp9HWM51/v/nhrBKvq+0F3axGr8g91mP8JUR7suJuy9gki4x1pw9w7gsk13xidVLZ+Z6OrzDFk/zclfnbGiww93jia5oRCZoaokJ7elot98XtDcFGC/bGwj31anK3QlPKOsBLHcG2IovQbnMMpGXw5fbFa1gFZCMA0M/cxcRqKzaVhOXNlF0Yn5+592Grga9Ty8F3hTRy9ITiTcBwT8XdtFT8Jp8dylW5CIeyGPz+Ww2n0/jc7A+H+vwFQrFtZjAHLQCoCVQyyMg+BzNoXn8F/L9BHEcT5KoxoBPYQOa+8WpU78o4v9+YRj9HN+W+8OyYlXTK7VJj26uXLiw4l2Ym1t4c+TTa9c+HXHl3rt06b1ccd+XCsPo+eI+PaewVMaZrlO/4V2cnV30rly48GZpg0vZDgjmC3Poc/wuEAB6xKN51NsnvfUNYuneq4pNRBbUaATfld+XUTyFyL7/Iu7cq79/1yXxC0DIvYOWFxlCZAReeXhSeWhGeRiRIT+9UntlxTA8Xpub0gu6K3pBp8wNQcMVAyq7Li1vtV8Pb25uboavt29tbUGhADn4ISbQTzALHfAYqKED/liJU66Vf4C2ZQyVXp1CnZ+gALqRlBqU95/hAXQKb8nnhB45JyPLGo0siweYpiZGfoq45ZAbE+iEHKNWsNI59D3kjkQA4H8AAAD//wEAAP//NFexPQAAAAEAAAACCbpCsMDbXw889QADA+gAAAAA3B0N9wAAAADcHHNL/z/+OgMZBCQAAAADAAIAAAAAAAAAAQAAA9j+7wAAAlj/P/8/AxkAAQAAAAAAAAAAAAAAAAAAADx4nCyPzSrGcRQGx2yUq7Ci2LCgSEqIlHyUTEryEWVpac8FuDJ7d2Bvr3/vb3E6p9PTPI2xa2AsGo/GnnFtvBkfxoZxZtwZD8ancWxcGmvGs/Fk7BsrI7tqLBibxpJxYZwbO8aB8TIYN8arcWJsG7cjM+0v48g4NE6N9cG/H78tY9n4GfNnfBvvM4+5+eFxNXp+p/sfAAD//wEAAP//cYIplAAAAAAAACoAKgBOAIIAsgDQAOYA+gEqAUIBWAFyAYIBsAHSAf4CIgJKAo4CoALEAuADHgNMA2oDpgPWBAoEQARkBM4E2gT0BRIFRAVmBZIFxgXmBiQGSgZsBpoG/AcUBz4HfAegB7YHwgfUB/AICggaCCgIWAhkCHQIjAiaAAAAAQAAADwB+AAqAGUABgABAAAAAAAAAAAAAAAAAAMAA3icnJZLbJPZFcd/zrkBv3gZVA0IVVcjhKYIjJ1JwE0g4JABwiBCSWbaClHVJMaxSOzIdmDoYhZdVl11XXUzXbQStAolaiaBQiCkagWq1EU1q666qLroqppFV9V3vuPEcRI6g5DI7z7O/57Xvf6Ai3ILIeKiEUiCcYQkSeMODvGOsZDklLEjyUXjTpKMGm8jyQ+Nt5Ni0jjKYT41jnGYXxrHOcKfjROc4D/GSQYjR4x30hupGO/iYORXxrvpiiwb72nxM8XByJfGe1d1YsBKR8o4wjc7vjDuYGfHl8bCZXHGrmVPJ+Ny1XgbR+SR8Xaeyd+No3S7XxjH6HZ/NU7Q1bnNeIf4zpzxTrqj3ws5ArujPzWOsDv6c+MODkTvGwvJ6IqxIxU1/Ugnqeg/jLeRilosQf5jUeMoh2IHjGP4WL9xnKOxHxgnyMR+YpwkHVsw3kFX7J/GO8nFmzq7OBy/ZrybU/FPjPe0+Jzi3bjlKrK3RXPfqub+CKTifzOOkIo35zt4N/5fY2Ff4qCx40AiY9zJgcQl420cSIwbb2df4lPjKJnEz4xjvJd4bhznaOJfxgm6k98wTpJLNjV3cir5Y+NdZJJ/MN7NxeS/jfe0+Jmia8cJ472BjszKM1mUV3gKLVyijOcwnkm8PJY5vMzKgizJnDyWV/JE5uS5fCb35bH8Hh+5JEvyQP4kT/DysIXnW3hFPpMHsiQP5XNZkKd4l5UFeSlL8rksyqLOvjL7WfmjvMZzveMLbgRnyCN5oCqhLwtyX+ZlTpYDHa6T4YYsy0t5Jk/ld2q/onq/wcszmZXXsiizuvPYFjufynON8YUsy5wsyW/lRXOW6xzhhryQ1/JYHspTWQxODc6Wl3h5pDOzahPObO7joS1Ovo+XOXkis5qFIMvLzXn196ie3pJfjqqna3VryXfbWknHG/PeUhXbsVpJfo2niwxZMniO2ahLR3nGqXKTIp4R7lGnQZEp6niGqDBGlRrT+n9B18bxvMcEDRpM08txjnNX/6UprKql1XKK43wr8Ie7lGkwgecaReoUqXHH1M5TpUIDzxUKTAW++HcYocoMNcYo+v2kW8d4zlFlXOkqNaqqWmKGSQrU6CJNhvfJ0UeeQQYYpm+dQtM+tD7WZh9aDTPAB3ysvtYpq5d+nfYEVRoaaYU7eLK6liZLlhP0MUWB2xR11y2KfKIeBwo9pDlBDye0Ll/ds/VZKGudCngaWp9xrV2w7zaeKrfeusJljTWoWGD3ERWtX7g2QsN2hqdXGOe42nuNdEIz5lV5Ritbo6y702/lzVUKGr9nkDSei6Ya9NWoZjf4O6P9FvhdpPI1+rPBPaYpMsqE5XOtH0c0hw3uak7XMj5JWStQ0U4OcjKjWQjjbmZthCEu4xlW/co65cvrFIJI2vssq32U1tgmNj13rf53KFDWDrnJpK6s3beCnpvnO8oNevFt2akzphWapqE1qqtWWmtQ4jjDnOdymyf/P0fj+jes/U1mVrsnjC7omuCW5xnRyo/4/XgGdDzEiGbkuwwxykWG+YhRHee5xjXyXGGUIT5Q22Gu6XswzBUG1WJIOVw7rzfgCt/H8yFDuifQLlp+wooFN3Nava+r72Evl5liWnMeeJ7WWIsa4devsOeWqTZt62ozRplbutNr/Sp61wuUrCum1cMpzWWzN9ZuXdgRUxpLUNu19RJVfV9renMDVc89ezuCbg19Cl+Ixleoavqteqa+msOi+rx+XLLfgbK+jeGr0/xGGdFfgrL+fo2p14FtEFHwe9k+M79hZkVrVeMm5bDXZIVz3NPTJu0eeW5qbGoRfplQ1yrUtUaBRz9SlWrzm8ReiyolfZ+mNXNjeqPu6SjsAv0q2XJvwV69mmb9dvN7ZMPZwVs1ae++19hKpn6IGxSYNJWKvZSeCjP6+1nT1fCuaWxk3+hPu1K99UtlQxWP6tveXpP22m62S79m2ivjsuuqvZndijvjzrp+l3cDrt99G+8y7TOU3Md4l8O7v+BdHu9OuozLux53wfW6jDvlci7vMkp51+tygVXkknK/ap3RHafdh8GKPNxyZX7LlRU976zLrp3gskpnXc71uT6Xcxdcj65m3DDe9bqzLuMGgnGzB9XvC6rT6067c24gVHenXb/rc5ebvegGXM6dcf3ufdUYbDmz2/W4wcCzZi9uujf04KTrcj3upOt2/WGmmv24pR8n3WmXcb16Tr9GlQlUm525hV89VpFTGn+wZ8D1BBlp7bWNdQ764Y012pBvtdjQHW/Umd+sM95osfI/AAAA//8BAAD//5uVuAcAAwAAAAAAAP+1ADIAAAABAAAAAAAAAAAAAAAAAAAAAA==");
+}
+.d2-1919814611 .text-mono-bold {
+	font-family: "d2-1919814611-font-mono-bold";
+}
+@font-face {
+	font-family: d2-1919814611-font-mono-bold;
+	src: url("data:application/font-woff;base64,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");
+}
+.d2-1919814611 .text-mono-italic {
+	font-family: "d2-1919814611-font-mono-italic";
+}
+@font-face {
+	font-family: d2-1919814611-font-mono-italic;
+	src: url("data:application/font-woff;base64,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");
+}]]></style><style type="text/css"><![CDATA[.shape {
+  shape-rendering: geometricPrecision;
+  stroke-linejoin: round;
+}
+.connection {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.blend {
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+}
 
-  <!-- Background -->
-  <rect width="940" height="860" rx="16" fill="#0B0F19" />
-
-  <!-- Gradients -->
-  <defs>
-    <!-- Soft Shadows -->
-    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
-    </filter>
-    <filter id="glow-indigo" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#6366F1" flood-opacity="0.4"/>
-    </filter>
-    <filter id="glow-teal" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#0D9488" flood-opacity="0.4"/>
-    </filter>
-
-    <!-- Card Gradients -->
-    <linearGradient id="grad-input" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4F46E5" />
-      <stop offset="100%" stop-color="#312E81" />
-    </linearGradient>
-    <linearGradient id="grad-internal" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1E293B" />
-      <stop offset="100%" stop-color="#0F172A" />
-    </linearGradient>
-    <linearGradient id="grad-workload" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0D9488" />
-      <stop offset="100%" stop-color="#115E59" />
-    </linearGradient>
-    <linearGradient id="grad-subresource" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#334155" />
-      <stop offset="100%" stop-color="#1E293B" />
-    </linearGradient>
-    <linearGradient id="grad-operational" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7C3AED" />
-      <stop offset="100%" stop-color="#5B21B6" />
-    </linearGradient>
-
-    <!-- Arrow Marker -->
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
-    </marker>
-    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38BDF8" />
-    </marker>
-    <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-      <path d="M 0 1 L 10 5 L 0 9 z" fill="#0D9488" />
-    </marker>
-  </defs>
-
-  <!-- Title & Header -->
-  <g transform="translate(40, 45)">
-    <text class="title" x="0" y="0">Kalypso Core RGD Flow Graph</text>
-    <text class="subtitle" x="0" y="24">Resource instantiation tree and conditional graph dependencies in v1alpha2</text>
-  </g>
-
-  <!-- Legend -->
-  <g transform="translate(680, 20)">
-    <rect x="0" y="0" width="220" height="120" rx="8" fill="#1E293B" stroke="#334155" stroke-width="1" />
-    <text class="label" x="15" y="22" font-size="11">Legend</text>
-    <circle cx="20" cy="45" r="6" fill="#4F46E5" />
-    <text class="desc" x="35" y="49">Input Custom Resource</text>
-    <circle cx="20" cy="65" r="6" fill="#1E293B" stroke="#475569" stroke-width="1.5" />
-    <text class="desc" x="35" y="69">Internal / Chained RGD</text>
-    <circle cx="20" cy="85" r="6" fill="#0D9488" />
-    <text class="desc" x="35" y="89">Core Workloads (Exclusive)</text>
-    <circle cx="20" cy="105" r="6" fill="#7C3AED" />
-    <text class="desc" x="35" y="109">Operational/Support Resources</text>
-  </g>
-
-  <!-- Connector Lines Section -->
-  <g>
-    <!-- Connect: Core CR -> PodSpec Chained RGD (Widened space) -->
-    <path d="M 210,220 L 300,220" fill="none" stroke="#38BDF8" stroke-width="2" marker-end="url(#arrow-blue)" />
-    <text class="arrow-text" x="255" y="210" text-anchor="middle">Chains to</text>
-
-    <!-- Connect: PodTemplate -> Workloads (Central Hub Line) -->
-    <path d="M 525,347 L 550,347 L 550,270 L 580,270" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <path d="M 550,270 L 550,190 L 580,190" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <path d="M 550,347 L 580,350" fill="none" stroke="#0D9488" stroke-width="2" marker-end="url(#arrow-teal)" />
-    <text class="arrow-text" x="550" y="150" text-anchor="middle">Injects PodSpec</text>
-
-    <!-- Connect: Core CR -> Workloads Selection Direct Paths (shows dependency + exclusivity) -->
-    <path d="M 115,270 L 115,455 L 580,455" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 115,455 L 115,520 L 580,520" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 115,520 L 115,585 L 580,585" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 115,585 L 115,650 L 580,650" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 115,650 L 115,715 L 580,715" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-    <path d="M 115,270 L 115,415 L 580,415" fill="none" stroke="#475569" stroke-dasharray="4,4" stroke-width="1.5" marker-end="url(#arrow)" />
-  </g>
-
-  <!-- 1. INPUT LAYER: Core CR -->
-  <g class="node-card" filter="url(#shadow)" transform="translate(20, 170)">
-    <rect width="190" height="100" rx="10" fill="url(#grad-input)" stroke="#6366F1" stroke-width="2" />
-    <text class="box-title" x="15" y="30">Core CR</text>
-    <text class="box-desc" x="15" y="48">kalypso.lmoet.io/v1alpha2</text>
-    <rect x="15" y="58" width="160" height="1" fill="#818CF8" opacity="0.3" />
-    <text class="resource-text" x="15" y="74">kind: Core</text>
-    <text class="resource-text" x="15" y="88">workloadType: string</text>
-  </g>
-
-  <!-- 2. INTERNAL RESOLUTION LAYER: PodSpec RGD (Chained) -->
-  <g filter="url(#shadow)" transform="translate(300, 80)">
-    <rect width="240" height="310" rx="12" fill="url(#grad-internal)" stroke="#475569" stroke-width="2" />
-    <text class="box-title" x="15" y="25">PodSpec RGD (Chained)</text>
-    <text class="box-desc" x="15" y="42">Internal resource mapping</text>
-    
-    <!-- SA -->
-    <g class="node-card" transform="translate(15, 60)">
-      <rect width="210" height="48" rx="6" fill="url(#grad-subresource)" stroke="#64748B" stroke-width="1" />
-      <text class="label" x="10" y="20" font-size="11">ServiceAccount</text>
-      <text class="cond-text" x="10" y="38">includeWhen: serviceAccount.create</text>
-    </g>
-
-    <!-- ConfigMap -->
-    <g class="node-card" transform="translate(15, 120)">
-      <rect width="210" height="48" rx="6" fill="url(#grad-subresource)" stroke="#64748B" stroke-width="1" />
-      <text class="label" x="10" y="20" font-size="11">ConfigMap</text>
-      <text class="cond-text" x="10" y="38">includeWhen: configMap.enabled</text>
-    </g>
-
-    <!-- Secret -->
-    <g class="node-card" transform="translate(15, 180)">
-      <rect width="210" height="48" rx="6" fill="url(#grad-subresource)" stroke="#64748B" stroke-width="1" />
-      <text class="label" x="10" y="20" font-size="11">Secret</text>
-      <text class="cond-text" x="10" y="38">includeWhen: secret.enabled</text>
-    </g>
-
-    <!-- Resolved PodTemplate -->
-    <g class="node-card" filter="url(#glow-indigo)" transform="translate(15, 240)">
-      <rect width="210" height="55" rx="6" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.5" />
-      <text class="label" x="10" y="20" font-size="11" fill="#A5B4FC">PodTemplate (Internal)</text>
-      <text class="desc" x="10" y="35" font-size="9">Resolves container specs, probes,</text>
-      <text class="desc" x="10" y="47" font-size="9">mounts, environment variables, scheduling</text>
-    </g>
-  </g>
-
-  <!-- 3. CORE WORKLOAD LAYER: Exclusive Workloads (Shifted Downwards) -->
-  <!-- Deployment -->
-  <g class="node-card" filter="url(#glow-teal)" transform="translate(580, 160)">
-    <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="2" />
-    <text class="box-title" x="15" y="25">Deployment</text>
-    <text class="box-desc" x="15" y="45">Standard stateless workloads</text>
-    <rect x="175" y="10" width="130" height="40" rx="4" fill="#042F2E" />
-    <text class="cond-text" x="182" y="26" fill="#2DD4BF">workloadType ==</text>
-    <text class="cond-text" x="182" y="38" fill="#2DD4BF">"Deployment"</text>
-  </g>
-
-  <!-- StatefulSet -->
-  <g class="node-card" transform="translate(580, 240)">
-    <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="1.5" />
-    <text class="box-title" x="15" y="25">StatefulSet</text>
-    <text class="box-desc" x="15" y="45">Stateful workloads with PVCs</text>
-    <rect x="175" y="10" width="130" height="40" rx="4" fill="#042F2E" />
-    <text class="cond-text" x="182" y="26" fill="#2DD4BF">workloadType ==</text>
-    <text class="cond-text" x="182" y="38" fill="#2DD4BF">"StatefulSet"</text>
-  </g>
-
-  <!-- DaemonSet -->
-  <g class="node-card" transform="translate(580, 320)">
-    <rect width="320" height="60" rx="8" fill="url(#grad-workload)" stroke="#0D9488" stroke-width="1.5" />
-    <text class="box-title" x="15" y="25">DaemonSet</text>
-    <text class="box-desc" x="15" y="45">Per-node system agents</text>
-    <rect x="175" y="10" width="130" height="40" rx="4" fill="#042F2E" />
-    <text class="cond-text" x="182" y="26" fill="#2DD4BF">workloadType ==</text>
-    <text class="cond-text" x="182" y="38" fill="#2DD4BF">"DaemonSet"</text>
-  </g>
-
-  <!-- 4. OPERATIONAL ADDONS LAYER (Shifted Downwards) -->
-  <!-- HorizontalPodAutoscaler -->
-  <g class="node-card" transform="translate(580, 430)">
-    <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
-    <text class="box-title" x="15" y="22" font-size="12">HorizontalPodAutoscaler (HPA)</text>
-    <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: autoscaling.enabled &amp;&amp; (Deployment || StatefulSet)</text>
-  </g>
-
-  <!-- PodDisruptionBudget -->
-  <g class="node-card" transform="translate(580, 495)">
-    <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
-    <text class="box-title" x="15" y="22" font-size="12">PodDisruptionBudget (PDB)</text>
-    <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: pdb.enabled</text>
-  </g>
-
-  <!-- NetworkPolicy -->
-  <g class="node-card" transform="translate(580, 560)">
-    <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
-    <text class="box-title" x="15" y="22" font-size="12">NetworkPolicy</text>
-    <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: networkPolicy.enabled</text>
-  </g>
-
-  <!-- Namespaced RBAC (Role & RoleBinding) -->
-  <g class="node-card" transform="translate(580, 625)">
-    <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
-    <text class="box-title" x="15" y="22" font-size="12">Role &amp; RoleBinding</text>
-    <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: size(rbac.rules) &gt; 0</text>
-  </g>
-
-  <!-- Cluster-wide RBAC (ClusterRole & ClusterRoleBinding) -->
-  <g class="node-card" transform="translate(580, 690)">
-    <rect width="320" height="50" rx="6" fill="url(#grad-operational)" stroke="#8B5CF6" stroke-width="1" />
-    <text class="box-title" x="15" y="22" font-size="12">ClusterRole &amp; ClusterRoleBinding</text>
-    <text class="cond-text" x="15" y="38" fill="#DDD6FE">includeWhen: size(rbac.clusterRules) &gt; 0</text>
-  </g>
-
-  <!-- Flow details connector info (Moved Downward) -->
-  <g transform="translate(40, 790)">
-    <text class="subtitle" x="0" y="0">• All resources are namespace-scoped to match the Core CR, except ClusterRole/Binding (prefixed by namespace).</text>
-    <text class="subtitle" x="0" y="16">• Deployment, StatefulSet, and DaemonSet share the exact same PodSpec definition resolved by the internal PodSpec RGD.</text>
-  </g>
-</svg>
+		.d2-1919814611 .fill-N1{fill:#000410;}
+		.d2-1919814611 .fill-N2{fill:#0000B8;}
+		.d2-1919814611 .fill-N3{fill:#9499AB;}
+		.d2-1919814611 .fill-N4{fill:#CFD2DD;}
+		.d2-1919814611 .fill-N5{fill:#C3DEF3;}
+		.d2-1919814611 .fill-N6{fill:#EEF1F8;}
+		.d2-1919814611 .fill-N7{fill:#FFFFFF;}
+		.d2-1919814611 .fill-B1{fill:#000410;}
+		.d2-1919814611 .fill-B2{fill:#0000E4;}
+		.d2-1919814611 .fill-B3{fill:#5AA4DC;}
+		.d2-1919814611 .fill-B4{fill:#E7E9EE;}
+		.d2-1919814611 .fill-B5{fill:#F5F6F9;}
+		.d2-1919814611 .fill-B6{fill:#FFFFFF;}
+		.d2-1919814611 .fill-AA2{fill:#008566;}
+		.d2-1919814611 .fill-AA4{fill:#45BBA5;}
+		.d2-1919814611 .fill-AA5{fill:#7ACCBD;}
+		.d2-1919814611 .fill-AB4{fill:#F1C759;}
+		.d2-1919814611 .fill-AB5{fill:#F9E088;}
+		.d2-1919814611 .stroke-N1{stroke:#000410;}
+		.d2-1919814611 .stroke-N2{stroke:#0000B8;}
+		.d2-1919814611 .stroke-N3{stroke:#9499AB;}
+		.d2-1919814611 .stroke-N4{stroke:#CFD2DD;}
+		.d2-1919814611 .stroke-N5{stroke:#C3DEF3;}
+		.d2-1919814611 .stroke-N6{stroke:#EEF1F8;}
+		.d2-1919814611 .stroke-N7{stroke:#FFFFFF;}
+		.d2-1919814611 .stroke-B1{stroke:#000410;}
+		.d2-1919814611 .stroke-B2{stroke:#0000E4;}
+		.d2-1919814611 .stroke-B3{stroke:#5AA4DC;}
+		.d2-1919814611 .stroke-B4{stroke:#E7E9EE;}
+		.d2-1919814611 .stroke-B5{stroke:#F5F6F9;}
+		.d2-1919814611 .stroke-B6{stroke:#FFFFFF;}
+		.d2-1919814611 .stroke-AA2{stroke:#008566;}
+		.d2-1919814611 .stroke-AA4{stroke:#45BBA5;}
+		.d2-1919814611 .stroke-AA5{stroke:#7ACCBD;}
+		.d2-1919814611 .stroke-AB4{stroke:#F1C759;}
+		.d2-1919814611 .stroke-AB5{stroke:#F9E088;}
+		.d2-1919814611 .background-color-N1{background-color:#000410;}
+		.d2-1919814611 .background-color-N2{background-color:#0000B8;}
+		.d2-1919814611 .background-color-N3{background-color:#9499AB;}
+		.d2-1919814611 .background-color-N4{background-color:#CFD2DD;}
+		.d2-1919814611 .background-color-N5{background-color:#C3DEF3;}
+		.d2-1919814611 .background-color-N6{background-color:#EEF1F8;}
+		.d2-1919814611 .background-color-N7{background-color:#FFFFFF;}
+		.d2-1919814611 .background-color-B1{background-color:#000410;}
+		.d2-1919814611 .background-color-B2{background-color:#0000E4;}
+		.d2-1919814611 .background-color-B3{background-color:#5AA4DC;}
+		.d2-1919814611 .background-color-B4{background-color:#E7E9EE;}
+		.d2-1919814611 .background-color-B5{background-color:#F5F6F9;}
+		.d2-1919814611 .background-color-B6{background-color:#FFFFFF;}
+		.d2-1919814611 .background-color-AA2{background-color:#008566;}
+		.d2-1919814611 .background-color-AA4{background-color:#45BBA5;}
+		.d2-1919814611 .background-color-AA5{background-color:#7ACCBD;}
+		.d2-1919814611 .background-color-AB4{background-color:#F1C759;}
+		.d2-1919814611 .background-color-AB5{background-color:#F9E088;}
+		.d2-1919814611 .color-N1{color:#000410;}
+		.d2-1919814611 .color-N2{color:#0000B8;}
+		.d2-1919814611 .color-N3{color:#9499AB;}
+		.d2-1919814611 .color-N4{color:#CFD2DD;}
+		.d2-1919814611 .color-N5{color:#C3DEF3;}
+		.d2-1919814611 .color-N6{color:#EEF1F8;}
+		.d2-1919814611 .color-N7{color:#FFFFFF;}
+		.d2-1919814611 .color-B1{color:#000410;}
+		.d2-1919814611 .color-B2{color:#0000E4;}
+		.d2-1919814611 .color-B3{color:#5AA4DC;}
+		.d2-1919814611 .color-B4{color:#E7E9EE;}
+		.d2-1919814611 .color-B5{color:#F5F6F9;}
+		.d2-1919814611 .color-B6{color:#FFFFFF;}
+		.d2-1919814611 .color-AA2{color:#008566;}
+		.d2-1919814611 .color-AA4{color:#45BBA5;}
+		.d2-1919814611 .color-AA5{color:#7ACCBD;}
+		.d2-1919814611 .color-AB4{color:#F1C759;}
+		.d2-1919814611 .color-AB5{color:#F9E088;}.appendix text.text{fill:#000410}.md{--color-fg-default:#000410;--color-fg-muted:#0000B8;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#000410;--color-border-muted:#0000E4;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0000E4;--color-accent-emphasis:#0000E4;--color-attention-subtle:#0000B8;--color-danger-fg:red;}.sketch-overlay-B1{fill:url(#streaks-darker-d2-1919814611);mix-blend-mode:lighten}.sketch-overlay-B2{fill:url(#streaks-darker-d2-1919814611);mix-blend-mode:lighten}.sketch-overlay-B3{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-B4{fill:url(#streaks-bright-d2-1919814611);mix-blend-mode:darken}.sketch-overlay-B5{fill:url(#streaks-bright-d2-1919814611);mix-blend-mode:darken}.sketch-overlay-B6{fill:url(#streaks-bright-d2-1919814611);mix-blend-mode:darken}.sketch-overlay-AA2{fill:url(#streaks-dark-d2-1919814611);mix-blend-mode:overlay}.sketch-overlay-AA4{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-AA5{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-AB4{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-AB5{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-N1{fill:url(#streaks-darker-d2-1919814611);mix-blend-mode:lighten}.sketch-overlay-N2{fill:url(#streaks-darker-d2-1919814611);mix-blend-mode:lighten}.sketch-overlay-N3{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-N4{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-N5{fill:url(#streaks-normal-d2-1919814611);mix-blend-mode:color-burn}.sketch-overlay-N6{fill:url(#streaks-bright-d2-1919814611);mix-blend-mode:darken}.sketch-overlay-N7{fill:url(#streaks-bright-d2-1919814611);mix-blend-mode:darken}.light-code{display: block}.dark-code{display: none}]]></style><style type="text/css"><![CDATA[
+.dots-overlay {
+	fill: url(#dots-d2-1919814611);
+	mix-blend-mode: multiply;
+}]]></style><defs><pattern id="dots-d2-1919814611" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse">
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="2" y="2" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="12" y="2" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="12" y="12" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="2" y="12" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="2" y="7" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="12" y="7" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="7" y="2" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="7" y="12" width="1" height="1" fill="#0A0F25"/>
+</g>
+<g style="mix-blend-mode:multiply" opacity="0.1">
+<rect x="7" y="7" width="1" height="1" fill="#0A0F25"/>
+</g>
+</pattern>
+</defs><g class="aW5wdXQ="><g class="shape" ><rect x="231.000000" y="12.000000" width="667.000000" height="356.000000" stroke="#000410" fill="#E7E9EE" class=" stroke-B1 fill-B4" style="stroke-width:2;" /><rect x="231.000000" y="12.000000" width="667.000000" height="356.000000" class="dots-overlay" style="stroke-width:2;" /><rect x="236.000000" y="17.000000" width="657.000000" height="346.000000" stroke="#000410" fill="transparent" class=" stroke-B1" style="stroke-width:2;" /></g><text x="564.500000" y="45.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:28px">1. INPUT LAYER</text></g><g class="aW50ZXJuYWw="><g class="shape" ><rect x="806.000000" y="599.000000" width="1561.000000" height="482.000000" stroke="#000410" fill="#E7E9EE" class=" stroke-B1 fill-B4" style="stroke-width:2;" /><rect x="806.000000" y="599.000000" width="1561.000000" height="482.000000" class="dots-overlay" style="stroke-width:2;" /><rect x="811.000000" y="604.000000" width="1551.000000" height="472.000000" stroke="#000410" fill="transparent" class=" stroke-B1" style="stroke-width:2;" /></g><text x="1586.500000" y="632.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:28px">2. INTERNAL RESOLUTION LAYER</text></g><g class="d29ya2xvYWRz"><g class="shape" ><rect x="143.000000" y="1317.000000" width="1418.000000" height="182.000000" stroke="#000410" fill="#E7E9EE" class=" stroke-B1 fill-B4" style="stroke-width:2;" /><rect x="143.000000" y="1317.000000" width="1418.000000" height="182.000000" class="dots-overlay" style="stroke-width:2;" /><rect x="148.000000" y="1322.000000" width="1408.000000" height="172.000000" stroke="#000410" fill="transparent" class=" stroke-B1" style="stroke-width:2;" /></g><text x="852.000000" y="1350.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:28px">3. WORKLOAD LAYER (EXCLUSIVE)</text></g><g class="YWRkb25z"><g class="shape" ><rect x="403.000000" y="1735.000000" width="1776.000000" height="182.000000" stroke="#000410" fill="#E7E9EE" class=" stroke-B1 fill-B4" style="stroke-width:2;" /><rect x="403.000000" y="1735.000000" width="1776.000000" height="182.000000" class="dots-overlay" style="stroke-width:2;" /><rect x="408.000000" y="1740.000000" width="1766.000000" height="172.000000" stroke="#000410" fill="transparent" class=" stroke-B1" style="stroke-width:2;" /></g><text x="1291.000000" y="1768.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:28px">4. OPERATIONAL ADDONS (CONDITIONAL)</text></g><g class="aW5wdXQuY29yZV9jcg== input-node"><g class="shape" ><rect x="281.000000" y="62.000000" width="567.000000" height="256.000000" rx="8.000000" stroke="#6366F1" fill="#1E293B" style="stroke-width:2;" /><rect x="281.000000" y="62.000000" width="567.000000" height="256.000000" rx="8.000000" class="dots-overlay" style="stroke-width:2;" /></g><text x="564.500000" y="91.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:24px"><tspan x="564.500000" dy="0.000000">CORE CR</tspan><tspan x="564.500000" dy="27.500000">(KALYPSO.LMOET.IO/V1ALPHA2)</tspan></text></g><g class="aW50ZXJuYWwucG9kc3BlY19yZ2Q= internal-node"><g class="shape" ><rect x="856.000000" y="649.000000" width="1461.000000" height="377.000000" rx="8.000000" stroke="#475569" fill="#0B0F19" style="stroke-width:2;" /><rect x="856.000000" y="649.000000" width="1461.000000" height="377.000000" rx="8.000000" class="dots-overlay" style="stroke-width:2;" /></g><text x="1586.500000" y="678.000000" fill="#000410" class="text-mono fill-N1" style="text-anchor:middle;font-size:24px"><tspan x="1586.500000" dy="0.000000">PODSPEC RGD</tspan><tspan x="1586.500000" dy="27.500000">(CHAINED HELPER RGD)</tspan></text></g><g class="d29ya2xvYWRzLmRlcA== generated-node"><g class="shape" ><rect x="193.000000" y="1367.000000" width="426.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="406.000000" y="1405.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="406.000000" dy="0.000000">DEPLOYMENT</tspan><tspan x="406.000000" dy="18.500000">INCLUDEWHEN: COMPUTETYPE == &#39;DEPLOYMENT&#39;</tspan></text></g><g class="d29ya2xvYWRzLnNz generated-node"><g class="shape" ><rect x="639.000000" y="1367.000000" width="436.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="857.000000" y="1405.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="857.000000" dy="0.000000">STATEFULSET</tspan><tspan x="857.000000" dy="18.500000">INCLUDEWHEN: COMPUTETYPE == &#39;STATEFULSET&#39;</tspan></text></g><g class="d29ya2xvYWRzLmRz generated-node"><g class="shape" ><rect x="1095.000000" y="1367.000000" width="416.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1303.000000" y="1405.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1303.000000" dy="0.000000">DAEMONSET</tspan><tspan x="1303.000000" dy="18.500000">INCLUDEWHEN: COMPUTETYPE == &#39;DAEMONSET&#39;</tspan></text></g><g class="YWRkb25zLmhwYQ== generated-node"><g class="shape" ><rect x="453.000000" y="1785.000000" width="352.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="629.000000" y="1823.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="629.000000" dy="0.000000">HPA V2</tspan><tspan x="629.000000" dy="18.500000">INCLUDEWHEN: AUTOSCALING.ENABLED</tspan></text></g><g class="YWRkb25zLnBkYg== generated-node"><g class="shape" ><rect x="825.000000" y="1785.000000" width="275.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="962.500000" y="1823.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="962.500000" dy="0.000000">PODDISRUPTIONBUDGET</tspan><tspan x="962.500000" dy="18.500000">INCLUDEWHEN: PDB.ENABLED</tspan></text></g><g class="YWRkb25zLm5ldHBvbA== generated-node"><g class="shape" ><rect x="1120.000000" y="1785.000000" width="371.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1305.500000" y="1823.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1305.500000" dy="0.000000">NETWORKPOLICY</tspan><tspan x="1305.500000" dy="18.500000">INCLUDEWHEN: NETWORKPOLICY.ENABLED</tspan></text></g><g class="YWRkb25zLnJvbGU= generated-node"><g class="shape" ><rect x="1511.000000" y="1785.000000" width="265.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1643.500000" y="1823.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1643.500000" dy="0.000000">ROLE &amp; BINDING</tspan><tspan x="1643.500000" dy="18.500000">INCLUDEWHEN: RBAC.RULES</tspan></text></g><g class="YWRkb25zLmNyb2xl generated-node"><g class="shape" ><rect x="1796.000000" y="1785.000000" width="333.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1962.500000" y="1823.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1962.500000" dy="0.000000">CLUSTERROLE &amp; BINDING</tspan><tspan x="1962.500000" dy="18.500000">INCLUDEWHEN: RBAC.CLUSTERRULES</tspan></text></g><g class="aW5wdXQuY29yZV9jci5zcGVj"><g class="shape" ></g><g transform="translate(331.000000 127.000000)" class="light-code"><rect width="467.000000" height="141.000000" stroke="#000410" class="shape stroke-N1" style="fill:#ffffff;stroke-width:2;" /><g transform="translate(8.000000 8.000000)"><text class="text-mono" x="0" y="1.000000em"><tspan fill="#000080">kind</tspan>:<tspan fill="#bbbbbb">&#160;</tspan>Core<tspan fill="#bbbbbb">
+</tspan></text><text class="text-mono" x="0" y="2.300000em"><tspan fill="#bbbbbb"></tspan><tspan fill="#000080">spec</tspan>:<tspan fill="#bbbbbb">
+</tspan></text><text class="text-mono" x="0" y="3.600000em"><tspan fill="#bbbbbb"></tspan><tspan fill="#bbbbbb">&#160;&#160;</tspan><tspan fill="#000080">computeType</tspan>:<tspan fill="#bbbbbb">&#160;</tspan>Deployment|StatefulSet|DaemonSet<tspan fill="#bbbbbb">
+</tspan></text><text class="text-mono" x="0" y="4.900000em"><tspan fill="#bbbbbb">&#160;&#160;</tspan><tspan fill="#000080">image</tspan>:<tspan fill="#bbbbbb">&#160;</tspan>string<tspan fill="#bbbbbb">
+</tspan></text><text class="text-mono" x="0" y="6.200000em"><tspan fill="#bbbbbb">&#160;&#160;</tspan><tspan fill="#000080">port</tspan>:<tspan fill="#bbbbbb">&#160;</tspan>int<tspan fill="#bbbbbb">
+</tspan></text><text class="text-mono" x="0" y="7.500000em"><tspan fill="#bbbbbb">&#160;&#160;</tspan><tspan fill="#999988" class="text-mono-italic">#&#160;...</tspan></text></g></g><g transform="translate(331.000000 127.000000)" class="dark-code"><rect width="467.000000" height="141.000000" stroke="#000410" class="shape stroke-N1" style="fill:#1e1e2e;stroke-width:2;" /><g transform="translate(8.000000 8.000000)"><text class="text-mono" x="0" y="1.000000em"><tspan fill="#cba6f7">kind</tspan><tspan fill="#cdd6f4">:</tspan><tspan fill="#cdd6f4">&#160;</tspan><tspan fill="#cdd6f4">Core</tspan><tspan fill="#cdd6f4">
+</tspan></text><text class="text-mono" x="0" y="2.300000em"><tspan fill="#cdd6f4"></tspan><tspan fill="#cba6f7">spec</tspan><tspan fill="#cdd6f4">:</tspan><tspan fill="#cdd6f4">
+</tspan></text><text class="text-mono" x="0" y="3.600000em"><tspan fill="#cdd6f4"></tspan><tspan fill="#cdd6f4">&#160;&#160;</tspan><tspan fill="#cba6f7">computeType</tspan><tspan fill="#cdd6f4">:</tspan><tspan fill="#cdd6f4">&#160;</tspan><tspan fill="#cdd6f4">Deployment|StatefulSet|DaemonSet</tspan><tspan fill="#cdd6f4">
+</tspan></text><text class="text-mono" x="0" y="4.900000em"><tspan fill="#cdd6f4">&#160;&#160;</tspan><tspan fill="#cba6f7">image</tspan><tspan fill="#cdd6f4">:</tspan><tspan fill="#cdd6f4">&#160;</tspan><tspan fill="#cdd6f4">string</tspan><tspan fill="#cdd6f4">
+</tspan></text><text class="text-mono" x="0" y="6.200000em"><tspan fill="#cdd6f4">&#160;&#160;</tspan><tspan fill="#cba6f7">port</tspan><tspan fill="#cdd6f4">:</tspan><tspan fill="#cdd6f4">&#160;</tspan><tspan fill="#cdd6f4">int</tspan><tspan fill="#cdd6f4">
+</tspan></text><text class="text-mono" x="0" y="7.500000em"><tspan fill="#cdd6f4">&#160;&#160;</tspan><tspan fill="#6c7086" class="text-mono-italic">#&#160;...</tspan></text></g></g></g><g class="aW50ZXJuYWwucG9kc3BlY19yZ2Quc2E= generated-node"><g class="shape" ><rect x="906.000000" y="714.000000" width="371.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1091.500000" y="752.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1091.500000" dy="0.000000">SERVICEACCOUNT</tspan><tspan x="1091.500000" dy="18.500000">INCLUDEWHEN: SERVICEACCOUNT.CREATE</tspan></text></g><g class="aW50ZXJuYWwucG9kc3BlY19yZ2QuY20= generated-node"><g class="shape" ><rect x="1297.000000" y="714.000000" width="334.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1464.000000" y="752.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1464.000000" dy="0.000000">CONFIGMAP</tspan><tspan x="1464.000000" dy="18.500000">INCLUDEWHEN: CONFIGMAP.ENABLED</tspan></text></g><g class="aW50ZXJuYWwucG9kc3BlY19yZ2Quc2Vj generated-node"><g class="shape" ><rect x="1651.000000" y="714.000000" width="305.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="1803.500000" y="752.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="1803.500000" dy="0.000000">SECRET</tspan><tspan x="1803.500000" dy="18.500000">INCLUDEWHEN: SECRET.ENABLED</tspan></text></g><g class="aW50ZXJuYWwucG9kc3BlY19yZ2QucHQ= generated-node"><g class="shape" ><rect x="1976.000000" y="714.000000" width="291.000000" height="82.000000" rx="6.000000" stroke="#0D9488" fill="#0B0F19" style="stroke-width:1;" /></g><text x="2121.500000" y="752.500000" fill="#000410" class="text-mono-bold fill-N1" style="text-anchor:middle;font-size:16px"><tspan x="2121.500000" dy="0.000000">PODTEMPLATE</tspan><tspan x="2121.500000" dy="18.500000">(GENERATES PODSPEC STATUS)</tspan></text></g><g class="KGlucHV0LmNvcmVfY3IgLSZndDsgaW50ZXJuYWwucG9kc3BlY19yZ2QpWzBd flow-edge"><marker id="mk-d2-1919814611-2247100417" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#38BDF8" class="connection" stroke-width="2" /> </marker><path d="M 706.458008 320.000000 L 706.458008 413.000000 S 706.458008 413.000000 706.458008 413.000000 L 1498.041016 413.000000 S 1498.041016 413.000000 1498.041016 413.000000 L 1498.041016 645.000000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="1173.000000" y="419.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">CHAINS TO</text></g><g class="KGludGVybmFsLnBvZHNwZWNfcmdkLnB0IC0mZ3Q7IHdvcmtsb2FkcylbMF0= flow-edge"><path d="M 2121.708008 797.500000 L 2121.708008 886.000000 S 2121.708008 886.000000 2121.708008 886.000000 L 1100.958008 886.000000 S 1100.958008 886.000000 1100.958008 886.000000 L 1100.958008 1313.000000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="1441.000000" y="892.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">PROVIDES PODSPEC SPEC</text></g><g class="KGlucHV0LmNvcmVfY3IgLSZndDsgd29ya2xvYWRzKVswXQ== conditional-edge"><marker id="mk-d2-1919814611-2328043311" markerWidth="10.000000" markerHeight="12.000000" refX="7.000000" refY="6.000000" viewBox="0.000000 0.000000 10.000000 12.000000" orient="auto" markerUnits="userSpaceOnUse"> <polygon points="0.000000,0.000000 10.000000,6.000000 0.000000,12.000000" fill="#F43F5E" class="connection" stroke-width="2" /> </marker><path d="M 564.708008 320.000000 L 564.708008 463.000000 S 564.708008 463.000000 564.708008 463.000000 L 690.166016 463.000000 S 690.166016 463.000000 690.166016 463.000000 L 690.166016 1313.000000" stroke="#F43F5E" fill="none" class="connection" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-1919814611-2328043311)" mask="url(#d2-1919814611)" /><text x="690.000000" y="760.000000" fill="#F43F5E" class="text-mono-italic" style="text-anchor:middle;font-size:16px">SELECTS TYPE</text></g><g class="KGlucHV0LmNvcmVfY3IgLSZndDsgYWRkb25zKVswXQ== conditional-edge"><path d="M 422.958008 320.000000 L 422.958008 413.000000 S 422.958008 413.000000 422.958008 413.000000 L 102.500000 413.000000 S 102.500000 413.000000 102.500000 413.000000 L 102.500000 1690.000000 S 102.500000 1690.000000 102.500000 1690.000000 L 619.875000 1690.000000 S 619.875000 1690.000000 619.875000 1690.000000 L 619.875000 1731.000000" stroke="#F43F5E" fill="none" class="connection" style="stroke-width:2;stroke-dasharray:8.000000,7.892511;" marker-end="url(#mk-d2-1919814611-2328043311)" mask="url(#d2-1919814611)" /><text x="102.500000" y="1130.000000" fill="#F43F5E" class="text-mono-italic" style="text-anchor:middle;font-size:16px">TRIGGERS IF ENABLED</text></g><g class="KHdvcmtsb2FkcyAtJmd0OyBhZGRvbnMuaHBhKVswXQ== flow-edge"><path d="M 622.166016 1501.000000 L 622.166016 1640.000000 S 622.166016 1640.000000 622.166016 1640.000000 L 629.875000 1640.000000 S 629.875000 1640.000000 629.875000 1640.000000 L 629.875000 1781.500000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="628.000000" y="1646.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">TARGETREF</text></g><g class="KHdvcmtsb2FkcyAtJmd0OyBhZGRvbnMucGRiKVswXQ== flow-edge"><path d="M 963.375000 1501.000000 L 963.375000 1781.500000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="963.500000" y="1648.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">SELECTOR MATCH</text></g><g class="KGludGVybmFsLnBvZHNwZWNfcmdkLnNhIC0mZ3Q7IGFkZG9ucy5yb2xlKVswXQ== flow-edge"><path d="M 1029.875000 797.500000 L 1029.875000 1176.000000 S 1029.875000 1176.000000 1029.875000 1176.000000 L 1631.583008 1176.000000 S 1631.583008 1176.000000 1631.583008 1176.000000 L 1631.583008 1781.500000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="1445.000000" y="1182.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">BINDS TO</text></g><g class="KGludGVybmFsLnBvZHNwZWNfcmdkLnNhIC0mZ3Q7IGFkZG9ucy5jcm9sZSlbMF0= flow-edge"><path d="M 1153.541016 797.500000 L 1153.541016 1126.000000 S 1153.541016 1126.000000 1153.541016 1126.000000 L 1783.500000 1126.000000 S 1783.500000 1126.000000 1783.500000 1126.000000 L 1783.500000 1640.000000 S 1783.500000 1640.000000 1783.500000 1640.000000 L 1963.375000 1640.000000 S 1963.375000 1640.000000 1963.375000 1640.000000 L 1963.375000 1781.500000" stroke="#38BDF8" fill="none" class="connection" style="stroke-width:2;" marker-end="url(#mk-d2-1919814611-2247100417)" mask="url(#d2-1919814611)" /><text x="1723.000000" y="1132.000000" fill="#38BDF8" class="text-mono-italic" style="text-anchor:middle;font-size:16px">BINDS TO</text></g><mask id="d2-1919814611" maskUnits="userSpaceOnUse" x="-88" y="-89" width="2556" height="2107">
+<rect x="-88" y="-89" width="2556" height="2107" fill="white"></rect>
+<rect x="1128.000000" y="403.000000" width="90" height="21" fill="black"></rect>
+<rect x="1338.000000" y="876.000000" width="206" height="21" fill="black"></rect>
+<rect x="630.000000" y="744.000000" width="120" height="21" fill="black"></rect>
+<rect x="10.000000" y="1114.000000" width="185" height="21" fill="black"></rect>
+<rect x="583.000000" y="1630.000000" width="90" height="21" fill="black"></rect>
+<rect x="894.000000" y="1632.000000" width="139" height="21" fill="black"></rect>
+<rect x="1404.000000" y="1166.000000" width="82" height="21" fill="black"></rect>
+<rect x="1682.000000" y="1116.000000" width="82" height="21" fill="black"></rect>
+</mask></svg></svg>

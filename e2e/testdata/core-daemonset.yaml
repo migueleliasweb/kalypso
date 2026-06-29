@@ -3,5 +3,5 @@ kind: Core
 metadata:
   name: core-daemonset
 spec:
-  workloadType: DaemonSet
+  computeType: DaemonSet
   image: gcr.io/google-samples/hello-app:1.0

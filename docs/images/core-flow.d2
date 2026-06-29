@@ -1,0 +1,160 @@
+# Kalypso Core capability flow diagram
+# Written in D2 (https://d2lang.com)
+
+vars: {
+  d2-config: {
+    layout-engine: elk
+    theme-id: 300
+  }
+}
+
+style.fill: transparent
+
+classes: {
+  input-node: {
+    style: {
+      fill: "#1E293B"
+      stroke: "#6366F1"
+      stroke-width: 2
+      border-radius: 8
+    }
+  }
+  internal-node: {
+    style: {
+      fill: "#0B0F19"
+      stroke: "#475569"
+      stroke-width: 2
+      border-radius: 8
+    }
+  }
+  generated-node: {
+    style: {
+      fill: "#0B0F19"
+      stroke: "#0D9488"
+      stroke-width: 1
+      border-radius: 6
+    }
+  }
+  conditional-edge: {
+    style: {
+      stroke: "#F43F5E"
+      stroke-dash: 4
+      font-color: "#F43F5E"
+    }
+  }
+  flow-edge: {
+    style: {
+      stroke: "#38BDF8"
+      stroke-width: 2
+      font-color: "#38BDF8"
+    }
+  }
+}
+
+input: "1. INPUT LAYER" {
+  core_cr: "Core CR\n(kalypso.lmoet.io/v1alpha2)" {
+    class: input-node
+    spec: |`yaml
+      kind: Core
+      spec:
+        computeType: Deployment|StatefulSet|DaemonSet
+        image: string
+        port: int
+        # ...
+    `|
+  }
+}
+
+internal: "2. INTERNAL RESOLUTION LAYER" {
+  podspec_rgd: "PodSpec RGD\n(Chained helper RGD)" {
+    class: internal-node
+
+    sa: "ServiceAccount" {
+      class: generated-node
+      label: "ServiceAccount\nincludeWhen: serviceAccount.create"
+    }
+    cm: "ConfigMap" {
+      class: generated-node
+      label: "ConfigMap\nincludeWhen: configMap.enabled"
+    }
+    sec: "Secret" {
+      class: generated-node
+      label: "Secret\nincludeWhen: secret.enabled"
+    }
+    pt: "PodTemplate" {
+      class: generated-node
+      label: "PodTemplate\n(generates PodSpec status)"
+    }
+  }
+}
+
+workloads: "3. WORKLOAD LAYER (Exclusive)" {
+  dep: "Deployment" {
+    class: generated-node
+    label: "Deployment\nincludeWhen: computeType == 'Deployment'"
+  }
+  ss: "StatefulSet" {
+    class: generated-node
+    label: "StatefulSet\nincludeWhen: computeType == 'StatefulSet'"
+  }
+  ds: "DaemonSet" {
+    class: generated-node
+    label: "DaemonSet\nincludeWhen: computeType == 'DaemonSet'"
+  }
+}
+
+addons: "4. OPERATIONAL ADDONS (Conditional)" {
+  hpa: "HPA v2" {
+    class: generated-node
+    label: "HPA v2\nincludeWhen: autoscaling.enabled"
+  }
+  pdb: "PodDisruptionBudget" {
+    class: generated-node
+    label: "PodDisruptionBudget\nincludeWhen: pdb.enabled"
+  }
+  netpol: "NetworkPolicy" {
+    class: generated-node
+    label: "NetworkPolicy\nincludeWhen: networkPolicy.enabled"
+  }
+  role: "Role & Binding" {
+    class: generated-node
+    label: "Role & Binding\nincludeWhen: rbac.rules"
+  }
+  crole: "ClusterRole & Binding" {
+    class: generated-node
+    label: "ClusterRole & Binding\nincludeWhen: rbac.clusterRules"
+  }
+}
+
+# Connections
+input.core_cr -> internal.podspec_rgd: "Chains to" {
+  class: flow-edge
+}
+
+internal.podspec_rgd.pt -> workloads: "Provides PodSpec spec" {
+  class: flow-edge
+}
+
+input.core_cr -> workloads: "Selects type" {
+  class: conditional-edge
+}
+
+input.core_cr -> addons: "Triggers if enabled" {
+  class: conditional-edge
+}
+
+workloads -> addons.hpa: "TargetRef" {
+  class: flow-edge
+}
+
+workloads -> addons.pdb: "Selector match" {
+  class: flow-edge
+}
+
+internal.podspec_rgd.sa -> addons.role: "Binds to" {
+  class: flow-edge
+}
+
+internal.podspec_rgd.sa -> addons.crole: "Binds to" {
+  class: flow-edge
+}

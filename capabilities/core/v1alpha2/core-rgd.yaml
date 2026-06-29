@@ -10,7 +10,7 @@ spec:
     scope: Namespaced
 
     spec:
-      workloadType: string | default="Deployment" enum="Deployment,StatefulSet,DaemonSet" description="The type of workload to run"
+      computeType: string | default="Deployment" enum="Deployment,StatefulSet,DaemonSet" description="The type of workload to run"
       replicas: integer | default=1 minimum=1 description="Number of desired replicas (only for Deployment/StatefulSet)"
 
       # --- Delegate Container/Pod specification fields to PodSpec CRD
@@ -138,7 +138,7 @@ spec:
     # --- Deployment (conditional)
     - id: deployment
       includeWhen:
-        - '${schema.spec.workloadType == "Deployment"}'
+        - '${schema.spec.computeType == "Deployment"}'
       template:
         apiVersion: apps/v1
         kind: Deployment
@@ -162,7 +162,7 @@ spec:
     # --- StatefulSet (conditional)
     - id: statefulSet
       includeWhen:
-        - '${schema.spec.workloadType == "StatefulSet"}'
+        - '${schema.spec.computeType == "StatefulSet"}'
       template:
         apiVersion: apps/v1
         kind: StatefulSet
@@ -188,7 +188,7 @@ spec:
     # --- DaemonSet (conditional)
     - id: daemonSet
       includeWhen:
-        - '${schema.spec.workloadType == "DaemonSet"}'
+        - '${schema.spec.computeType == "DaemonSet"}'
       template:
         apiVersion: apps/v1
         kind: DaemonSet
@@ -211,7 +211,7 @@ spec:
     # --- HorizontalPodAutoscaler (conditional)
     - id: hpa
       includeWhen:
-        - '${schema.spec.autoscaling.enabled && (schema.spec.workloadType == "Deployment" || schema.spec.workloadType == "StatefulSet")}'
+        - '${schema.spec.autoscaling.enabled && (schema.spec.computeType == "Deployment" || schema.spec.computeType == "StatefulSet")}'
       template:
         apiVersion: autoscaling/v2
         kind: HorizontalPodAutoscaler
@@ -222,7 +222,7 @@ spec:
         spec:
           scaleTargetRef:
             apiVersion: apps/v1
-            kind: '${schema.spec.workloadType}'
+            kind: '${schema.spec.computeType}'
             name: '${schema.metadata.name}'
           minReplicas: '${schema.spec.autoscaling.minReplicas}'
           maxReplicas: '${schema.spec.autoscaling.maxReplicas}'
